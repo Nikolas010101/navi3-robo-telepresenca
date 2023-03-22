@@ -1,0 +1,19 @@
+{
+  "name": "serverrobotelepresenca",
+  "version": "1.0.0",
+  "description": "Servidor para robo de telepresenca NAVI3",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "type": "module",
+  "author": "Murilo Preto",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0",
+    "ws": "^8.13.0"
+  }
+}
