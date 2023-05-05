@@ -52,7 +52,7 @@ const typesDef = {
 };
 
 // envia um arquivo json para todos os usuarios conectados ao servidor ws
-function sendFex(json) {
+function distributeData(json) {
     const data = JSON.stringify(json);
     for (let userId in clients) {
         let client = clients[userId];
@@ -67,6 +67,8 @@ function handleDisconnect(userId) {
     delete clients[userId];
 }
 
+// Template: const defaultList = [{fex:varchar, pan:int, tilt:int}];
+
 // Homepage
 app.get("/", function (req, res) {
     res.render("pages/index");
@@ -77,8 +79,10 @@ app.get("/control", function (req, res) {
     res.render("pages/control");
 });
 
-// Recebe expressao facial da pagina web
+// Recebe expressao facial da pagina web e envia para conexoes ws
 app.get("/api/fex/:data", function (req, res) {
     console.log(req.params.data);
     res.render("pages/control");
+
+    distributeData([{fex:req.params.data}]);
 });
