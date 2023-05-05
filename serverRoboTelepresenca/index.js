@@ -1,9 +1,15 @@
 import express from "express";
 import {WebSocket, WebSocketServer} from "ws";
 import {v4} from "uuid";
+import os from 'os';
+
 
 const app = express();
 const port = process.env.port || 3000;
+
+var networkInterfaces = os.networkInterfaces();
+const ip = networkInterfaces.wlp2s0[0].address;
+console.log(`Server on: ${ip}:${port}`);
 
 app.set("view engine", "ejs");
 app.use(express.json());
@@ -56,4 +62,13 @@ function handleDisconnect(userId) {
 
 app.get("/", function (req, res) {
     res.render("pages/index");
+});
+
+app.get("/control", function (req, res) {
+    res.render("pages/control");
+});
+
+app.get("/api/fex/:data", function (req, res) {
+    console.log(req.params.data);
+    res.render("pages/control");
 });
