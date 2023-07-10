@@ -9,12 +9,13 @@ const port = process.env.port || 3000;
 
 // Printa o Endereço de IP do servidor + porta
 var networkInterfaces = os.networkInterfaces();
-const ip = networkInterfaces.wlp2s0[0].address;
+const ip = "http://localhost";
 console.log(`Server on: ${ip}:${port}`);
 
 // Middleware
 app.set("view engine", "ejs");
 app.use(express.json());
+app.use(express.static('public'));
 
 // Configuracao de servidor websocket na mesma porta do servidor web
 const wsServer = new WebSocketServer({noServer: true});
