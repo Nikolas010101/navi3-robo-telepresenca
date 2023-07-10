@@ -185,24 +185,36 @@
                 </a>
             </div>
             <div class="sliders">
-                <div class="slider-container" id="pan">
+                <div class="slider-container">
                     <h2 class="slider-text">Controle pan</h2>
                     <div class="slider-inner-container">
-                        <input class="slider" type="range" min=-90 max=90 />
-                        <label for="pan" class="slider-label">0°</label>
+                        <input class="slider" type="range" min=-90 max=90 id="pan" />
+                        <label for="pan" class="slider-label" id="pan-label">0°</label>
                     </div>
                 </div>
-                <div class="slider-container" id="tilt">
+                <div class="slider-container">
                     <h2 class="slider-text">Controle tilt</h2>
                     <div class="slider-inner-container">
-                        <input class="slider" type="range" min=-90 max=90 />
-                        <label for="tilt" class="slider-label">0°</label>
+                        <input class="slider" type="range" min=-90 max=90 id="tilt" />
+                        <label for="tilt" class="slider-label" id="tilt-label">0°</label>
                     </div>
                 </div>
             </div>
         </div>
     </main>
     <footer><%- include('../partials/footer'); %></footer>
+    <script>
+        const panToggle = document.getElementById("pan")
+        const panLabel = document.getElementById("pan-label")
+        panToggle.oninput = function () {
+            panLabel.innerHTML = `${this.value}°`;
+        }
+        const tiltToggle = document.getElementById("tilt")
+        const tiltLabel = document.getElementById("tilt-label")
+        tiltToggle.oninput = function () {
+            tiltLabel.innerHTML = `${this.value}°`;
+        }
+    </script>
 </body>
 
 </html>
