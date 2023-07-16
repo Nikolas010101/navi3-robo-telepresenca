@@ -5,8 +5,7 @@
     <%- include('../partials/head'); %>
         <style>
             .video-player {
-                height: 50%;
-                width: 100%;
+                width: 70%;
                 border: 3px solid black;
                 border-radius: 10px;
                 margin: auto;
@@ -18,7 +17,7 @@
                 width: 50%;
                 padding: 5px;
             }
-            
+
             .icon {
                 width: 40px;
                 height: 40px;
@@ -205,16 +204,52 @@
     </main>
     <footer><%- include('../partials/footer'); %></footer>
     <script>
-        const panToggle = document.getElementById("pan")
+        // Create WebSocket connection
+        const ws = new WebSocket("ws://localhost:3000")
+
+        // Servo sliders
+        const panSlider = document.getElementById("pan")
         const panLabel = document.getElementById("pan-label")
-        panToggle.oninput = function () {
-            panLabel.innerHTML = `${this.value}°`;
-        }
-        const tiltToggle = document.getElementById("tilt")
+
+        const tiltSlider = document.getElementById("tilt")
         const tiltLabel = document.getElementById("tilt-label")
-        tiltToggle.oninput = function () {
-            tiltLabel.innerHTML = `${this.value}°`;
+
+        panSlider.addEventListener("input", () => {
+            panLabel.innerHTML = `${panSlider.value}°`
+            console.log(`Current pan: ${panLabel.innerHTML}`)
+            sendPosition()
+        })
+        tiltSlider.addEventListener("input", () => {
+            tiltLabel.innerHTML = `${tiltSlider.value}°`
+            console.log(`Current tilt: ${tiltLabel.innerHTML}`)
+            sendPosition()
+        })
+
+        // Update sliders with last value sent
+        async function updateSliders() {
+            const currentPosition = await fetch("/api/getPosition").then(r => r.json())
+
+            panSlider.value = currentPosition.pan
+            panLabel.innerHTML = `${panSlider.value}°`
+
+            tiltSlider.value = currentPosition.tilt
+            tiltLabel.innerHTML = `${tiltSlider.value}°`
         }
+
+        // Send servo position to server
+        async function sendPosition() {
+            fetch('/api/setPosition', {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    pan: Number(panSlider.value),
+                    tilt: Number(tiltSlider.value)
+                })
+            })
+        }
+        updateSliders()
     </script>
 </body>
 
