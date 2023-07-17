@@ -96,7 +96,7 @@ app.get("/api/getPosition", (req, res) => {
 app.post("/api/setPosition", (req, res) => {
 	currentState.currentPosition = { pan: req.body.pan, tilt: req.body.tilt };
 	console.log(
-		`Set servo values to: ${JSON.stringify(currentState.currentPosition)}`
+		`Set servo values to: pan = ${req.body.pan}°, tilt = ${req.body.tilt}°`
 	);
 	res.json(currentState.currentPosition);
 });
@@ -108,4 +108,9 @@ app.get("/api/fex/:data", function (req, res) {
 	res.render("pages/control");
 
 	distributeData([{ fex: req.params.data }]);
+});
+
+// Endpoint que retorna a emoção atual
+app.get("/api/getEmotion", (req, res) => {
+	res.json(currentState.currentEmotion);
 });

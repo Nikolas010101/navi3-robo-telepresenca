@@ -62,29 +62,32 @@
                 justify-content: space-around;
             }
 
-            .emotion-buttons .nav-link {
+            input[name="emotion"] {
+                display: none;
+            }
+
+            input[name="emotion"]+label {
+                padding: 5px 5px 0px 5px;
                 width: 100px;
-                text-decoration: none;
-                display: grid;
-                justify-content: center;
-            }
-
-            .emotion-icon {
-                margin: auto;
-                font-size: 1.4em;
-                border-radius: 50%;
-                height: 1.5em;
-                width: 1.5em;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                border: 2px solid black;
+                text-align: center;
                 background-color: gray;
-                transition: 0.5s;
+                border-radius: 5px;
+                color: white;
+                transition: 0.1275s;
             }
 
-            .emotion-icon:hover {
-                background-color: white;
+            input[name="emotion"]+label span {
+                font-size: 1.3em;
+            }
+
+            input[name="emotion"]+label:hover {
+                background-color: lightgrey;
+                color: black;
+            }
+
+            input[name="emotion"]:checked+label {
+                background-color: lightblue;
+                color: black;
             }
 
             .sliders {
@@ -141,7 +144,6 @@
             <div class="video-player">
                 <img class="placeholder" src="/img/wip.png" alt="Image placeholder">
             </div>
-            <!-- teste -->
             <div class="call-buttons">
                 <div class="call-icon">
                     <div class="icon" title="Desligar">
@@ -163,26 +165,45 @@
                 </div>
             </div>
             <div class="emotion-buttons">
-                <a title="Felicidade" class="nav-link" href="/api/fex/happy">
-                    <p class="emotion-icon">😀</p>
-                    <p>Felicidade</p>
-                </a>
-                <a title="Surpresa" class="nav-link" href="/api/fex/surprise">
-                    <p class="emotion-icon">😲</p>
-                    <p>Surpresa</p>
-                </a>
-                <a title="Tristeza" class="nav-link" href="/api/fex/sad">
-                    <p class="emotion-icon">😢</p>
-                    <p>Tristeza</p>
-                </a>
-                <a title="Dúvida" class="nav-link" href="/api/fex/doubt">
-                    <p class="emotion-icon">🤔</p>
-                    <p>Dúvida</p>
-                </a>
-                <a title="Neutro" class="nav-link" href="/api/fex/neutral">
-                    <p class="emotion-icon">😐</p>
-                    <p>Neutro</p>
-                </a>
+                <div class="emotion">
+                    <input type="radio" id="happy" name="emotion" value="happy">
+                    <label for="happy">
+                        <span class="emoji">😀</span>
+                        <p>Felicidade</p>
+                    </label>
+                </div>
+
+                <div class="emotion">
+                    <input type="radio" id="surprise" name="emotion" value="surprise">
+                    <label for="surprise">
+                        <span class="emoji">😮</span>
+                        <p>Surpresa</p>
+                    </label>
+                </div>
+
+                <div class="emotion">
+                    <input type="radio" id="sad" name="emotion" value="sad">
+                    <label for="sad">
+                        <span class="emoji">😢</span>
+                        <p>Tristeza</p>
+                    </label>
+                </div>
+
+                <div class="emotion">
+                    <input type="radio" id="doubt" name="emotion" value="doubt">
+                    <label for="doubt">
+                        <span class="emoji">🤔</span>
+                        <p>Dúvida</p>
+                    </label>
+                </div>
+
+                <div class="emotion">
+                    <input type="radio" id="neutral" name="emotion" value="neutral">
+                    <label for="neutral">
+                        <span class="emoji">😐</span>
+                        <p>Neutro</p>
+                    </label>
+                </div>
             </div>
             <div class="sliders">
                 <div class="slider-container">
@@ -207,33 +228,43 @@
         // Create WebSocket connection
         const ws = new WebSocket("ws://localhost:3000")
 
+        // Emotion buttons
+        const emotionButtons = document.querySelectorAll('input[name="emotion"]')
+        emotionButtons.forEach(button => {
+            button.addEventListener("change", () => fetch(`/api/fex/${button.value}`))
+        })
+
+        // Updates emotion to the last value sent
+        async function updateEmotion() {
+            const currentEmotion = await fetch("/api/getEmotion").then(r => r.json())
+            document.getElementById(currentEmotion).checked = true
+        }
+
         // Servo sliders
+        const sliders = document.querySelectorAll('input[type="range"]')
+
+        // Event listener changes slider labels visually
+        sliders.forEach(slider => {
+            slider.addEventListener("input", () => {
+                const label = document.getElementById(`${slider.id}-label`)
+                label.innerHTML = `${slider.value}°`
+                sendPosition()
+            })
+        })
+
         const panSlider = document.getElementById("pan")
         const panLabel = document.getElementById("pan-label")
 
         const tiltSlider = document.getElementById("tilt")
         const tiltLabel = document.getElementById("tilt-label")
 
-        panSlider.addEventListener("input", () => {
-            panLabel.innerHTML = `${panSlider.value}°`
-            console.log(`Current pan: ${panLabel.innerHTML}`)
-            sendPosition()
-        })
-        tiltSlider.addEventListener("input", () => {
-            tiltLabel.innerHTML = `${tiltSlider.value}°`
-            console.log(`Current tilt: ${tiltLabel.innerHTML}`)
-            sendPosition()
-        })
-
         // Update sliders with last value sent
         async function updateSliders() {
             const currentPosition = await fetch("/api/getPosition").then(r => r.json())
-
-            panSlider.value = currentPosition.pan
-            panLabel.innerHTML = `${panSlider.value}°`
-
-            tiltSlider.value = currentPosition.tilt
-            tiltLabel.innerHTML = `${tiltSlider.value}°`
+            sliders.forEach(slider => {
+                slider.value = currentPosition[slider.id]
+                document.getElementById(`${slider.id}-label`).innerHTML = `${slider.value}°`
+            })
         }
 
         // Send servo position to server
@@ -249,6 +280,8 @@
                 })
             })
         }
+
+        updateEmotion()
         updateSliders()
     </script>
 </body>
