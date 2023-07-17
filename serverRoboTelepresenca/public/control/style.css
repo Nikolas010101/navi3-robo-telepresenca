@@ -1,0 +1,129 @@
+.video-player {
+	width: 70%;
+	border: 3px solid black;
+	border-radius: 10px;
+	margin: auto;
+	text-align: center;
+}
+
+.placeholder {
+	height: 100%;
+	width: 50%;
+	padding: 5px;
+}
+
+.icon {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-content: center;
+	justify-content: center;
+	border: 2px solid black;
+	background-color: gray;
+	transition: 0.5s;
+}
+
+.icon:hover {
+	cursor: pointer;
+	background-color: white;
+}
+
+.icon-img {
+	width: 70%;
+}
+
+.call-buttons {
+	display: grid;
+	grid-template-columns: auto auto auto;
+	justify-content: center;
+}
+
+.call-icon {
+	margin: auto;
+	width: 300px;
+	border-radius: 50%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	transition: 0.5s;
+}
+
+.emotion-buttons {
+	display: grid;
+	grid-template-columns: repeat(5, auto);
+	justify-content: space-around;
+}
+
+input[name="emotion"] {
+	display: none;
+}
+
+input[name="emotion"] + label {
+	padding: 5px 5px 0px 5px;
+	width: 100px;
+	text-align: center;
+	background-color: gray;
+	border-radius: 5px;
+	color: white;
+	transition: 0.1275s;
+}
+
+input[name="emotion"] + label span {
+	font-size: 1.3em;
+}
+
+input[name="emotion"] + label:hover {
+	background-color: lightgrey;
+	color: black;
+}
+
+input[name="emotion"]:checked + label {
+	background-color: lightblue;
+	color: black;
+}
+
+.sliders {
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: space-around;
+}
+
+.slider-container {
+	width: 220px;
+	margin: 0px;
+	background-color: white;
+	border-radius: 10px;
+	border: 3px solid gray;
+	display: grid;
+	grid-template-rows: auto auto;
+	text-align: center;
+}
+
+.slider-inner-container {
+	display: grid;
+	grid-template-columns: auto auto;
+	justify-content: space-between;
+	align-content: center;
+	margin: 0 5px 0 5px;
+}
+
+.slider-text {
+	font-family: sans-serif;
+	font-weight: bold;
+	color: gray;
+	margin: 0;
+}
+
+.slider {
+	margin: 0;
+}
+
+.slider-label {
+	margin: 0;
+	font-size: 1.75em;
+	color: gray;
+	font-family: sans-serif;
+	font-weight: bold;
+}
