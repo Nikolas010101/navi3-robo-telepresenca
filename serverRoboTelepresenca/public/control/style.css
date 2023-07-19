@@ -1,8 +1,14 @@
+.jumbotron {
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
 .video-player {
 	width: 70%;
 	border: 3px solid black;
 	border-radius: 10px;
 	margin: auto;
+	margin-bottom: 10px;
 	text-align: center;
 }
 
@@ -50,17 +56,17 @@
 	transition: 0.5s;
 }
 
-.emotion-buttons {
+.expression-buttons {
 	display: grid;
 	grid-template-columns: repeat(5, auto);
 	justify-content: space-around;
 }
 
-input[name="emotion"] {
+input[name="expression"] {
 	display: none;
 }
 
-input[name="emotion"] + label {
+input[name="expression"] + label {
 	padding: 5px 5px 0px 5px;
 	width: 100px;
 	text-align: center;
@@ -70,16 +76,16 @@ input[name="emotion"] + label {
 	transition: 0.1275s;
 }
 
-input[name="emotion"] + label span {
+input[name="expression"] + label span {
 	font-size: 1.3em;
 }
 
-input[name="emotion"] + label:hover {
+input[name="expression"] + label:hover {
 	background-color: lightgrey;
 	color: black;
 }
 
-input[name="emotion"]:checked + label {
+input[name="expression"]:checked + label {
 	background-color: lightblue;
 	color: black;
 }

@@ -3,14 +3,6 @@ import { WebSocket, WebSocketServer } from "ws";
 import { v4 } from "uuid";
 import os from "os";
 
-const currentState = {
-	currentPosition: {
-		pan: 0,
-		tilt: 0,
-	},
-	currentEmotion: "neutral",
-};
-
 const app = express();
 const port = process.env.port || 3000;
 
@@ -21,8 +13,7 @@ console.log(`Server on: ${ip}:${port}`);
 
 // Middleware
 app.set("view engine", "ejs");
-app.use(express.json());
-app.use(express.static("public"));
+app.use([express.json(), express.static("public")]);
 
 // Configuracao de servidor websocket na mesma porta do servidor web
 const wsServer = new WebSocketServer({ noServer: true });
@@ -77,6 +68,14 @@ function handleDisconnect(userId) {
 
 // Template: const defaultList = [{fex:varchar, pan:int, tilt:int}];
 
+const state = {
+	pan: 0,
+	tilt: 0,
+	fex: "neutral",
+};
+
+// GET
+
 // Homepage
 app.get("/", function (req, res) {
 	res.render("pages/index");
@@ -88,29 +87,30 @@ app.get("/control", function (req, res) {
 });
 
 // Endpoint que retorna o último valor recebido de posição
-app.get("/api/getPosition", (req, res) => {
-	res.json(currentState.currentPosition);
+app.get("/api/servo", (req, res) => {
+	res.json({ pan: state.pan, tilt: state.tilt });
 });
 
+// Endpoint que retorna a expressão facial atual
+app.get("/api/fex", (req, res) => {
+	res.json({ fex: state.fex });
+});
+
+// POST
+
 // Endpoint para envio de posição
-app.post("/api/setPosition", (req, res) => {
-	currentState.currentPosition = { pan: req.body.pan, tilt: req.body.tilt };
-	console.log(
-		`Set servo values to: pan = ${req.body.pan}°, tilt = ${req.body.tilt}°`
-	);
-	res.json(currentState.currentPosition);
+app.post("/api/servo", (req, res) => {
+	state.pan = req.body.pan;
+	state.tilt = req.body.tilt;
+	console.log(`pan = ${state.pan}°, tilt = ${state.tilt}°`);
+	distributeData([state]);
+	res.json({ pan: state.pan, tilt: state.tilt });
 });
 
 // Recebe expressao facial da pagina web e envia para conexoes ws
-app.get("/api/fex/:data", function (req, res) {
-	currentState.currentEmotion = req.params.data;
-	console.log(`Set emotion value to: ${req.params.data}`);
-	res.render("pages/control");
-
-	distributeData([{ fex: req.params.data }]);
-});
-
-// Endpoint que retorna a emoção atual
-app.get("/api/getEmotion", (req, res) => {
-	res.json(currentState.currentEmotion);
+app.post("/api/fex", function (req, res) {
+	state.fex = req.body.fex;
+	console.log(`expression: ${state.fex}`);
+	distributeData([state]);
+	res.json({ fex: state.fex });
 });

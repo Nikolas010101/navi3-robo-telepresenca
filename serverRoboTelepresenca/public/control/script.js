@@ -1,16 +1,26 @@
 // Create WebSocket connection
 const ws = new WebSocket("ws://localhost:3000");
 
-// Emotion buttons
-const emotionButtons = document.querySelectorAll('input[name="emotion"]');
-emotionButtons.forEach((button) => {
-	button.addEventListener("change", () => fetch(`/api/fex/${button.value}`));
+// Expression buttons
+const expressionButtons = document.querySelectorAll('input[name="expression"]');
+expressionButtons.forEach((button) => {
+	button.addEventListener("change", () =>
+		fetch(`/api/fex`, {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+			},
+			body: JSON.stringify({ fex: button.value }),
+		})
+	);
 });
 
-// Updates emotion to the last value sent
-async function updateEmotion() {
-	const currentEmotion = await fetch("/api/getEmotion").then((r) => r.json());
-	document.getElementById(currentEmotion).checked = true;
+// Updates expression to the last value sent
+async function updateFacialExpression() {
+	const expression = await fetch("/api/fex").then((r) =>
+		r.json()
+	);
+	document.getElementById(expression.fex).checked = true;
 }
 
 // Servo sliders
@@ -33,11 +43,11 @@ const tiltLabel = document.getElementById("tilt-label");
 
 // Update sliders with last value sent
 async function updateSliders() {
-	const currentPosition = await fetch("/api/getPosition").then((r) =>
+	const position = await fetch("/api/servo").then((r) =>
 		r.json()
 	);
 	sliders.forEach((slider) => {
-		slider.value = currentPosition[slider.id];
+		slider.value = position[slider.id];
 		document.getElementById(
 			`${slider.id}-label`
 		).innerHTML = `${slider.value}°`;
@@ -46,7 +56,7 @@ async function updateSliders() {
 
 // Send servo position to server
 async function sendPosition() {
-	fetch("/api/setPosition", {
+	fetch("/api/servo", {
 		method: "POST",
 		headers: {
 			"content-type": "application/json",
@@ -58,5 +68,5 @@ async function sendPosition() {
 	});
 }
 
-updateEmotion();
+updateFacialExpression();
 updateSliders();
