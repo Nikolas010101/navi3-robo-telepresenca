@@ -1,6 +1,3 @@
-// Create WebSocket connection
-const ws = new WebSocket("ws://localhost:3000");
-
 // Expression buttons
 const expressionButtons = document.querySelectorAll('input[name="expression"]');
 expressionButtons.forEach((button) => {
@@ -17,9 +14,7 @@ expressionButtons.forEach((button) => {
 
 // Updates expression to the last value sent
 async function updateFacialExpression() {
-	const expression = await fetch("/api/fex").then((r) =>
-		r.json()
-	);
+	const expression = await fetch("/api/fex").then((r) => r.json());
 	document.getElementById(expression.fex).checked = true;
 }
 
@@ -43,9 +38,7 @@ const tiltLabel = document.getElementById("tilt-label");
 
 // Update sliders with last value sent
 async function updateSliders() {
-	const position = await fetch("/api/servo").then((r) =>
-		r.json()
-	);
+	const position = await fetch("/api/servo").then((r) => r.json());
 	sliders.forEach((slider) => {
 		slider.value = position[slider.id];
 		document.getElementById(

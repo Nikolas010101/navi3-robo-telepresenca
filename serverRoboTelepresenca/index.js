@@ -32,6 +32,8 @@ wsServer.on("connection", function (connection) {
 		console.log(message);
 		connection.send("Server: Connection established");
 	});
+
+	distributeData(state);
 });
 
 // Mudanca de protocolo de http para ws
@@ -43,12 +45,6 @@ server.on("upgrade", (req, socket, head) => {
 
 // clients = todos usuarios conectados ao servidor ws
 const clients = {};
-let editorContent = null;
-
-const typesDef = {
-	USER_EVENT: "userevent",
-	CONTENT_CHANGE: "contentchange",
-};
 
 // envia um arquivo json para todos os usuarios conectados ao servidor ws
 function distributeData(json) {
@@ -66,12 +62,10 @@ function handleDisconnect(userId) {
 	delete clients[userId];
 }
 
-// Template: const defaultList = [{fex:varchar, pan:int, tilt:int}];
-
 const state = {
 	pan: 0,
 	tilt: 0,
-	fex: "neutral",
+	fex: "N",
 };
 
 // GET
@@ -103,7 +97,7 @@ app.post("/api/servo", (req, res) => {
 	state.pan = req.body.pan;
 	state.tilt = req.body.tilt;
 	console.log(`pan = ${state.pan}°, tilt = ${state.tilt}°`);
-	distributeData([state]);
+	distributeData(state);
 	res.json({ pan: state.pan, tilt: state.tilt });
 });
 
@@ -111,6 +105,6 @@ app.post("/api/servo", (req, res) => {
 app.post("/api/fex", function (req, res) {
 	state.fex = req.body.fex;
 	console.log(`expression: ${state.fex}`);
-	distributeData([state]);
+	distributeData(state);
 	res.json({ fex: state.fex });
 });
