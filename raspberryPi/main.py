@@ -11,76 +11,59 @@ Duvida = D
 Surpresa = S
 """
 
-import tkinter as tk
-from tkVideoPlayer import TkinterVideo
-import os
 from websockets.sync.client import connect
-import json
-import functools
+import json, cv2, base64, pyaudio, wave, threading
 
-def play_next_video(event, videoplayer, playlist):
-    fex = receiveData(websocket)
-    fexVideo = full_path+"/"+expressaoAtual+expressaoFacial2Code[fex]+".mp4"
-    queue.append(fexVideo)
+CHUNK = 1024
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
+AUDIO_FILE = "audio.wav"
 
-    next_video = next(playlist, None)
-    print('Next is:', next_video)
-    if not next_video:
-        return
+audio = pyaudio.PyAudio()
+stream = audio.open(
+    format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
+)
+wf = wave.open(AUDIO_FILE, "wb")
+wf.setnchannels(CHANNELS)
+wf.setsampwidth(audio.get_sample_size(FORMAT))
+wf.setframerate(RATE)
+cap = cv2.VideoCapture(0)
 
-    # Play new video only after end of current
-    videoplayer.load(next_video)
-    videoplayer.play()
 
-def receiveData(websocket):
-    receivedData = websocket.recv()
-    receivedData = json.loads(receivedData.strip("[]"))
-    fex = receivedData["fex"]
-    print(fex)
+def move_servos(pan: int | None, tilt: int | None) -> None:
+    # TODO
+    pass
 
-    return fex
 
-# Anota todos os nomes de videos em uma lista
-absPath = os.path.dirname(__file__)
-relativePath = "videoFiles"
-full_path = os.path.join(absPath, relativePath)
-nomeVideos = []
+def listen(websocket) -> None:
+    while True:
+        received_data = json.loads(websocket.recv())
+        move_servos(received_data.get("pan", None), received_data("tilt", None))
 
-for diretorio, _, arquivos in os.walk(full_path):
-    for arquivo in arquivos:
-        nomeVideos.append(arquivo)
 
-expressaoFacial2Code = {"happy":"F", "neutral":"N", "doubt":"D", "surprise":"S"}
-expressaoAtual = "N"
-queue = []
+def capture_media(websocket) -> None:
+    while True:
+        # Capture video
+        ret, frame = cap.read()
+        if not ret or (cv2.waitKey(1) & 0xFF == ord("q")):
+            break
+        _, video_buffer = cv2.imencode(".jpg", frame)
 
-# Conexão ws com servidor
-with connect("ws://localhost:3000") as websocket:
-    fex = receiveData(websocket)
-    fexVideo = full_path+"/"+expressaoAtual+expressaoFacial2Code[fex]+".mp4"
-    queue.append(fexVideo)
+        # Capture audio
+        audio_buffer = stream.read(CHUNK)
+        wf.writeframes(audio_buffer)
 
-    if __name__ == "__main__":
-        root = tk.Tk()
-        root.geometry("800x500")
-        videoplayer = TkinterVideo(master=root, scaled=True)
+        # Send data
+        data = {
+            "audio": base64.b64encode(audio_buffer).decode("utf-8"),
+            "video": base64.b64encode(video_buffer).decode("utf-8"),
+        }
+        websocket.send(json.dumps(data))
 
-        # Use 'iter' to work with 'next' in callback
-        playlist = iter(queue)
 
-        # After end of video, use callback to run next video from playlist
-        videoplayer.bind(
-            "<<Ended>>",
-            functools.partial(
-                play_next_video,
-                videoplayer=videoplayer,
-                playlist=playlist,
-            ),
-        )
-
-    # Play first video from playlist
-    videoplayer.load(next(playlist))
-    videoplayer.pack(expand=True, fill="both")
-    videoplayer.play()
-
-    root.mainloop()
+if __name__ == "__main__":
+    with connect("ws://localhost:3000") as websocket:
+        listen_thread = threading.Thread(target=listen, args=(websocket,))
+        listen_thread.start()
+        capture_media(websocket)

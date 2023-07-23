@@ -22,15 +22,17 @@ const server = app.listen(port);
 // Handling de request do servidor soquete
 wsServer.on("connection", function (connection) {
 	const userId = v4();
-	console.log("Received message");
 	clients[userId] = connection;
+	connection.send(
+		JSON.stringify({ initialMessage: "Server: Connection established" })
+	);
 
 	connection.on("close", () => handleDisconnect(userId));
 
 	connection.on("message", function (message) {
+		console.log("Received message");
 		message = message.toString();
 		console.log(message);
-		connection.send("Server: Connection established");
 	});
 
 	distributeData(state);
