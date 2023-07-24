@@ -3,7 +3,7 @@
 	padding-bottom: 10px;
 }
 
-.video-player {
+.video-container {
 	width: 70%;
 	border: 3px solid black;
 	border-radius: 10px;
@@ -12,10 +12,11 @@
 	text-align: center;
 }
 
-.placeholder {
+#video-player {
 	height: 100%;
 	width: 50%;
 	padding: 5px;
+	transform: scaleX(-1);
 }
 
 .icon {
@@ -41,8 +42,9 @@
 
 .call-buttons {
 	display: grid;
-	grid-template-columns: auto auto auto;
+	grid-template-columns: repeat(4, auto);
 	justify-content: center;
+	margin: 10px;
 }
 
 .call-icon {
@@ -56,17 +58,19 @@
 	transition: 0.5s;
 }
 
-.expression-buttons {
+.call-buttons {
 	display: grid;
 	grid-template-columns: repeat(4, auto);
 	justify-content: space-around;
 }
 
-input[name="expression"] {
+input[name="expression"],
+input[name="call"] {
 	display: none;
 }
 
-input[name="expression"] + label {
+input[name="expression"] + label,
+input[name="call"] + label {
 	padding: 5px 5px 0px 5px;
 	width: 100px;
 	text-align: center;
@@ -76,16 +80,19 @@ input[name="expression"] + label {
 	transition: 0.1275s;
 }
 
-input[name="expression"] + label span {
+input[name="expression"] + label span,
+input[name="call"] + label span {
 	font-size: 1.3em;
 }
 
-input[name="expression"] + label:hover {
+input[name="expression"] + label:hover,
+input[name="call"] + label:hover {
 	background-color: lightgrey;
 	color: black;
 }
 
-input[name="expression"]:checked + label {
+input[name="expression"]:checked + label,
+input[name="call"]:checked + label {
 	background-color: lightblue;
 	color: black;
 }
