@@ -23,19 +23,20 @@ const server = app.listen(port);
 wsServer.on("connection", function (connection) {
 	const userId = v4();
 	clients[userId] = connection;
-	connection.send(
-		JSON.stringify({ initialMessage: "Server: Connection established" })
-	);
+	console.log("Server: Connection established");
 
 	connection.on("close", () => handleDisconnect(userId));
 
 	connection.on("message", function (message) {
-		console.log("Received message");
-		message = message.toString();
-		console.log(message);
+		message = JSON.parse(message.toString());
+		if (message.type === "media") {
+			distributeData(message);
+		} else {
+			console.log(message);
+			distributeData({ type: "control", ...state });
+		}
 	});
-
-	distributeData(state);
+	distributeData({ type: "control", ...state });
 });
 
 // Mudanca de protocolo de http para ws
@@ -82,6 +83,11 @@ app.get("/control", function (req, res) {
 	res.render("pages/control");
 });
 
+// Pagina para mostrar as expressões faciais
+app.get("/expression", function (req, res) {
+	res.render("pages/expression");
+});
+
 // Endpoint que retorna o último valor recebido de posição
 app.get("/api/servo", (req, res) => {
 	res.json({ pan: state.pan, tilt: state.tilt });
@@ -99,7 +105,7 @@ app.post("/api/servo", (req, res) => {
 	state.pan = req.body.pan;
 	state.tilt = req.body.tilt;
 	console.log(`pan = ${state.pan}°, tilt = ${state.tilt}°`);
-	distributeData(state);
+	distributeData({ type: "control", ...state });
 	res.json({ pan: state.pan, tilt: state.tilt });
 });
 
@@ -107,6 +113,6 @@ app.post("/api/servo", (req, res) => {
 app.post("/api/fex", function (req, res) {
 	state.fex = req.body.fex;
 	console.log(`expression: ${state.fex}`);
-	distributeData(state);
+	distributeData({ type: "control", ...state });
 	res.json({ fex: state.fex });
 });
