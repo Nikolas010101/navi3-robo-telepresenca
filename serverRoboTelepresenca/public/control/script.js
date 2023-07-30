@@ -14,17 +14,21 @@ let audioBuffer = null,
 	audioChunks = [];
 
 websocket.addEventListener("message", (event) => {
-	const data = JSON.parse(event.data);
-	if (data.type === "media") {
-		const videoBlob = base64ToBlob(data.video);
-		const frameURL = URL.createObjectURL(videoBlob);
-		videoPlayer.src = frameURL;
-		videoPlayer.alt = "Telepresence robot camera";
-
-		if (state.volume) {
-			const audioBuffer = base64ToArrayBuffer(data.audio);
-			handleAudioData(audioBuffer);
-		}
+	const message = JSON.parse(event.data);
+	switch (message.type) {
+		case "audio":
+			if (state.volume) {
+				handleAudioData(base64ToArrayBuffer(message.media));
+			}
+			break;
+		case "video":
+			const videoBlob = base64ToBlob(message.media);
+			const frameURL = URL.createObjectURL(videoBlob);
+			videoPlayer.src = frameURL;
+			videoPlayer.alt = "Telepresence robot camera";
+			break;
+		default:
+			break;
 	}
 });
 

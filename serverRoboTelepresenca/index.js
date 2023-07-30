@@ -29,11 +29,18 @@ wsServer.on("connection", function (connection) {
 
 	connection.on("message", function (message) {
 		message = JSON.parse(message.toString());
-		if (message.type === "media") {
-			distributeData(message);
-		} else {
-			console.log(message);
-			distributeData({ type: "control", ...state });
+		switch (message.type) {
+			case "audio":
+			case "video":
+				distributeData(message);
+				break;
+			case "control":
+				console.log(message);
+				distributeData({ type: "control", ...state });
+				break;
+			default:
+				console.log(`Unsupported message type: ${message.type}`);
+				break;
 		}
 	});
 	distributeData({ type: "control", ...state });

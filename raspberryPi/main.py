@@ -14,7 +14,7 @@ stream = audio.open(
 )
 SAMPLE_WIDTH = audio.get_sample_size(FORMAT)
 # Video constants
-FPS = 60
+FPS = 30
 INTERVAL = 1 / FPS  # s/frame
 cap = cv2.VideoCapture(0)
 
@@ -33,7 +33,7 @@ def listen(websocket) -> None:
             move_servos(pan, tilt)
 
 
-def capture_media(websocket) -> None:
+def capture_video(websocket) -> None:
     last_frame_time = time()
     while True:
         current_time = time()
@@ -46,30 +46,38 @@ def capture_media(websocket) -> None:
             _, video_buffer = cv2.imencode(".jpg", frame)
             video = base64.b64encode(video_buffer).decode("utf-8")
 
-            # Capture audio
-            audio_buffer = stream.read(CHUNK)
-            with wave.open(AUDIO_FILE, "wb") as wf:
-                wf.setnchannels(CHANNELS)
-                wf.setsampwidth(SAMPLE_WIDTH)
-                wf.setframerate(RATE)
-                wf.writeframes(audio_buffer)
-
-            with open(AUDIO_FILE, "rb") as file:
-                audio = base64.b64encode(file.read()).decode("utf-8")
-
             # Send data
-            data = json.dumps({"type": "media", "audio": audio, "video": video})
-
-            websocket.send(data)
+            websocket.send(json.dumps({"type": "video", "media": video}))
 
         cv2.waitKey(1)
+
+
+def capture_audio(websocket) -> None:
+    while True:
+        # Capture audio
+        audio_buffer = stream.read(CHUNK)
+        with wave.open(AUDIO_FILE, "wb") as wf:
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(SAMPLE_WIDTH)
+            wf.setframerate(RATE)
+            wf.writeframes(audio_buffer)
+
+        with open(AUDIO_FILE, "rb") as file:
+            audio = base64.b64encode(file.read()).decode("utf-8")
+
+        # Send data
+        websocket.send(json.dumps({"type": "audio", "media": audio}))
 
 
 if __name__ == "__main__":
     try:
         with connect("ws://localhost:3000") as websocket:
-            media_thread = threading.Thread(target=capture_media, args=(websocket,))
-            media_thread.start()
+            video_thread = threading.Thread(target=capture_video, args=(websocket,))
+            audio_thread = threading.Thread(target=capture_audio, args=(websocket,))
+
+            audio_thread.start()
+            video_thread.start()
+
             listen(websocket)
     finally:
         os.remove(AUDIO_FILE)
