@@ -1,4 +1,4 @@
-import json, cv2, base64, pyaudio, wave, threading
+import json, cv2, base64, pyaudio, wave, threading, os
 from time import time
 from websockets.sync.client import connect
 
@@ -7,18 +7,14 @@ CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
-AUDIO_FILE = "audio.wav"
+AUDIO_FILE = "temp.wav"
 audio = pyaudio.PyAudio()
 stream = audio.open(
     format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
 )
-wf = wave.open(AUDIO_FILE, "wb")
-wf.setnchannels(CHANNELS)
-wf.setsampwidth(audio.get_sample_size(FORMAT))
-wf.setframerate(RATE)
-
+SAMPLE_WIDTH = audio.get_sample_size(FORMAT)
 # Video constants
-FPS = 30
+FPS = 60
 INTERVAL = 1 / FPS  # s/frame
 cap = cv2.VideoCapture(0)
 
@@ -52,8 +48,14 @@ def capture_media(websocket) -> None:
 
             # Capture audio
             audio_buffer = stream.read(CHUNK)
-            audio = base64.b64encode(audio_buffer).decode("utf-8")
-            wf.writeframes(audio_buffer)
+            with wave.open(AUDIO_FILE, "wb") as wf:
+                wf.setnchannels(CHANNELS)
+                wf.setsampwidth(SAMPLE_WIDTH)
+                wf.setframerate(RATE)
+                wf.writeframes(audio_buffer)
+
+            with open(AUDIO_FILE, "rb") as file:
+                audio = base64.b64encode(file.read()).decode("utf-8")
 
             # Send data
             data = json.dumps({"type": "media", "audio": audio, "video": video})
@@ -64,7 +66,10 @@ def capture_media(websocket) -> None:
 
 
 if __name__ == "__main__":
-    with connect("ws://localhost:3000") as websocket:
-        media_thread = threading.Thread(target=capture_media, args=(websocket,))
-        media_thread.start()
-        listen(websocket)
+    try:
+        with connect("ws://localhost:3000") as websocket:
+            media_thread = threading.Thread(target=capture_media, args=(websocket,))
+            media_thread.start()
+            listen(websocket)
+    finally:
+        os.remove(AUDIO_FILE)

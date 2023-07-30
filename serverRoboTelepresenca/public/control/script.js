@@ -5,12 +5,14 @@ const state = {
 };
 
 // Audio and video players
-const audioPlayer = document.querySelector("#audio-player");
-let audioContext = null,
-	audioBuffer = null;
-const videoPlayer = document.querySelector("#video-player");
+const audioPlayer = document.querySelector("#audio-player"),
+	audioContext = new AudioContext(),
+	videoPlayer = document.querySelector("#video-player"),
+	websocket = new WebSocket("ws://localhost:3000");
 
-const websocket = new WebSocket("ws://localhost:3000");
+let audioBuffer = null,
+	audioChunks = [];
+
 websocket.addEventListener("message", (event) => {
 	const data = JSON.parse(event.data);
 	if (data.type === "media") {
@@ -20,13 +22,43 @@ websocket.addEventListener("message", (event) => {
 		videoPlayer.alt = "Telepresence robot camera";
 
 		if (state.volume) {
-			playAudio(data.audio);
+			const audioBuffer = base64ToArrayBuffer(data.audio);
+			handleAudioData(audioBuffer);
 		}
 	}
 });
 
-function playAudio(audio) {
-	// TODO
+function handleAudioData(chunk) {
+	audioChunks.push(chunk);
+	if (!audioBuffer) {
+		decodeAndPlayAudio();
+	}
+}
+
+async function decodeAndPlayAudio() {
+	try {
+		await audioContext.resume();
+		const concatenatedChunks = concatBuffers(audioChunks);
+		audioChunks = [];
+
+		audioBuffer = await audioContext.decodeAudioData(concatenatedChunks);
+
+		const source = audioContext.createBufferSource();
+		source.buffer = audioBuffer;
+
+		source.connect(audioContext.destination);
+
+		source.onended = () => {
+			audioBuffer = null;
+			if (audioChunks.length) {
+				decodeAndPlayAudio();
+			}
+		};
+
+		source.start();
+	} catch (error) {
+		console.error("Error decoding audio data:", error);
+	}
 }
 
 function base64ToBlob(base64String) {
@@ -54,6 +86,20 @@ function base64ToArrayBuffer(base64String) {
 		bytes[i] = binaryString.charCodeAt(i);
 	}
 	return bytes.buffer;
+}
+
+function concatBuffers(buffers) {
+	const totalLength = buffers.reduce(
+		(acc, buffer) => acc + buffer.byteLength,
+		0
+	);
+	const concatenated = new Uint8Array(totalLength);
+	let offset = 0;
+	buffers.forEach((buffer) => {
+		concatenated.set(new Uint8Array(buffer), offset);
+		offset += buffer.byteLength;
+	});
+	return concatenated.buffer;
 }
 
 // Call buttons
