@@ -1,4 +1,4 @@
-import json, cv2, base64, pyaudio, wave, threading, os
+import json, cv2, base64, pyaudio, wave, threading, os, pigpio as pio
 from time import time
 from websockets.sync.client import connect
 
@@ -13,15 +13,40 @@ stream = audio.open(
     format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK
 )
 SAMPLE_WIDTH = audio.get_sample_size(FORMAT)
+
 # Video constants
 FPS = 30
 INTERVAL = 1 / FPS  # s/frame
+WIDTH, HEIGHT = 320, 240 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
+
+# Servo constants
+pi = pio.pi()
+PAN_PIN = 17
+TILT_PIN = 2
+
+
+def get_period_ms(angle):
+    if angle > 90:
+        angle = 90
+    elif angle < -90:
+        angle = -90
+    return angle / 180 * 1000 + 1500
+
+
+def get_angle(period):
+    return (period - 1500) * 180 / 1000
 
 
 def move_servos(pan: int, tilt: int) -> None:
-    # TODO
-    pass
+    period_pan = get_period_ms(pan)
+    period_tilt = get_period_ms(tilt)
+
+    pi.set_servo_pulsewidth(PAN_PIN, period_pan)
+
+    pi.set_servo_pulsewidth(TILT_PIN, period_tilt)
 
 
 def listen(websocket) -> None:
