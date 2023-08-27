@@ -1,3 +1,5 @@
+const AUDIOSOURCE = "http://localhost:8080/audio";
+
 const state = {
 	mic: false,
 	video: false,
@@ -6,105 +8,10 @@ const state = {
 
 // Audio and video players
 const audioPlayer = document.querySelector("#audio-player"),
-	audioContext = new AudioContext(),
 	videoPlayer = document.querySelector("#video-player"),
 	websocket = new WebSocket("ws://localhost:3000");
 
-let audioBuffer = null,
-	audioChunks = [];
-
-websocket.addEventListener("message", (event) => {
-	const message = JSON.parse(event.data);
-	switch (message.type) {
-		case "audio":
-			if (state.volume) {
-				handleAudioData(base64ToArrayBuffer(message.media));
-			}
-			break;
-		case "video":
-			const videoBlob = base64ToBlob(message.media);
-			const frameURL = URL.createObjectURL(videoBlob);
-			videoPlayer.src = frameURL;
-			videoPlayer.alt = "Telepresence robot camera";
-			break;
-		default:
-			break;
-	}
-});
-
-function handleAudioData(chunk) {
-	audioChunks.push(chunk);
-	if (!audioBuffer) {
-		decodeAndPlayAudio();
-	}
-}
-
-async function decodeAndPlayAudio() {
-	try {
-		await audioContext.resume();
-		const concatenatedChunks = concatBuffers(audioChunks);
-		audioChunks = [];
-
-		audioBuffer = await audioContext.decodeAudioData(concatenatedChunks);
-
-		const source = audioContext.createBufferSource();
-		source.buffer = audioBuffer;
-
-		source.connect(audioContext.destination);
-
-		source.onended = () => {
-			audioBuffer = null;
-			if (audioChunks.length) {
-				decodeAndPlayAudio();
-			}
-		};
-
-		source.start();
-	} catch (error) {
-		console.error("Error decoding audio data:", error);
-	}
-}
-
-function base64ToBlob(base64String) {
-	const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-	const base64 = (base64String + padding)
-		.replace(/\-/g, "+")
-		.replace(/_/g, "/");
-	const binaryString = window.atob(base64);
-	const byteArrays = [];
-	for (let i = 0; i < binaryString.length; i++) {
-		byteArrays.push(binaryString.charCodeAt(i));
-	}
-	const byteArray = new Uint8Array(byteArrays);
-	return new Blob([byteArray]);
-}
-
-function base64ToArrayBuffer(base64String) {
-	const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-	const base64 = (base64String + padding)
-		.replace(/\-/g, "+")
-		.replace(/_/g, "/");
-	const binaryString = window.atob(base64);
-	const bytes = new Uint8Array(binaryString.length);
-	for (let i = 0; i < binaryString.length; i++) {
-		bytes[i] = binaryString.charCodeAt(i);
-	}
-	return bytes.buffer;
-}
-
-function concatBuffers(buffers) {
-	const totalLength = buffers.reduce(
-		(acc, buffer) => acc + buffer.byteLength,
-		0
-	);
-	const concatenated = new Uint8Array(totalLength);
-	let offset = 0;
-	buffers.forEach((buffer) => {
-		concatenated.set(new Uint8Array(buffer), offset);
-		offset += buffer.byteLength;
-	});
-	return concatenated.buffer;
-}
+audioPlayer.src = AUDIOSOURCE;
 
 // Call buttons
 const end = document.querySelector("#end");
@@ -123,6 +30,15 @@ video.addEventListener("change", (event) => {
 const volume = document.querySelector("#volume");
 volume.addEventListener("change", (event) => {
 	state.volume = event.target.checked;
+	if (state.volume) {
+		if (audioPlayer.paused) {
+			audioPlayer.src = AUDIOSOURCE;
+			audioPlayer.play();
+		}
+		audioPlayer.volume = 1;
+	} else {
+		audioPlayer.volume = 0;
+	}
 });
 
 // Expression buttons
