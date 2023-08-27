@@ -11,8 +11,6 @@ const audioPlayer = document.querySelector("#audio-player"),
 	videoPlayer = document.querySelector("#video-player"),
 	websocket = new WebSocket("ws://localhost:3000");
 
-audioPlayer.src = AUDIOSOURCE;
-
 // Call buttons
 const end = document.querySelector("#end");
 end.addEventListener("change", () => (location.href = "/"));
