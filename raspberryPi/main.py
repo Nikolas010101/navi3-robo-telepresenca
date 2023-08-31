@@ -133,7 +133,7 @@ def listen(websocket) -> None:
 ### END SERVO CONTROL BLOCK
 
 if __name__ == "__main__":
-    media_thread = threading.Thread(target=app.run, kwargs={"port": 8080})
-    media_thread.start()
     with connect("ws://localhost:3000") as websocket:
-        listen(websocket)
+        ws_thread = threading.Thread(target=listen, args=(websocket,))
+        ws_thread.start()
+        app.run(port=5050)
