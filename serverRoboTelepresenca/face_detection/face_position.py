@@ -19,8 +19,8 @@ def make_rect(img):
 
 while True:
     ret, frame = cap.read()
-    face = cv2.resize(make_rect(frame), (400, 400))
-
+    face = make_rect(frame)
+    
     cv2.imshow("Rosto", face)
 
     if cv2.waitKey(1) == 13:  # espaço

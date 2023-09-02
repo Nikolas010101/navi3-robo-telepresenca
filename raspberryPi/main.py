@@ -98,14 +98,15 @@ def video() -> Response:
 # pi = pio.pi()
 PAN_PIN = 17
 TILT_PIN = 2
+MAX_ANGLE = 60
 
 
-def get_period_ms(angle) -> int:
-    if angle > 90:
-        angle = 90
-    elif angle < -90:
-        angle = -90
-    return int(angle / 180) * 1000 + 1500
+def get_pulsewidth_from_angle(angle: float) -> int:
+    if angle > MAX_ANGLE:
+        angle = MAX_ANGLE
+    elif angle < -MAX_ANGLE:
+        angle = -MAX_ANGLE
+    return int(500 * angle / MAX_ANGLE) + 1500
 
 
 def get_angle(period) -> float:
@@ -113,8 +114,8 @@ def get_angle(period) -> float:
 
 
 def move_servos(pan: int, tilt: int) -> None:
-    period_pan = get_period_ms(pan)
-    period_tilt = get_period_ms(tilt)
+    pulsewidth_pan = get_pulsewidth_from_angle(pan)
+    pulsewidth_tilt = get_pulsewidth_from_angle(tilt)
 
     # pi.set_servo_pulsewidth(PAN_PIN, period_pan)
 
