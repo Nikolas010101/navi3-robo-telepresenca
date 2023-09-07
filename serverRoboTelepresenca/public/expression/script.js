@@ -10,19 +10,48 @@
 // Surpresa = S
 
 const IP = "ws://localhost:3000",
+	AUDIOSOURCE = "http://localhost:8080/audio",
 	ws = new WebSocket(IP),
-	videoPlayer = document.querySelector("#video-player");
+	videoPlayer = document.querySelector("#video-player"),
+	audioPlayer = document.querySelector("#audio-player"),
+	audioToggle = document.querySelector("#audio-toggle"),
+	state = {
+		volume: false,
+		prevExpression: "N",
+	};
 
-let prevExpression = "N";
+audioToggle.addEventListener("click", (toggle) => {
+	state.volume = !state.volume;
+	toggle.target.src = state.volume
+		? "/img/volume_off.svg"
+		: "/img/volume_on.svg";
+	if (state.volume) {
+		if (audioPlayer.paused) {
+			audioPlayer.src = AUDIOSOURCE;
+			audioPlayer.play();
+		}
+		audioPlayer.volume = 1;
+	} else {
+		audioPlayer.volume = 0;
+	}
+});
+
+let timeoutId = null;
 
 ws.addEventListener("message", (event) => {
-	const data = JSON.parse(event.data);
-	if (data.type === "control") {
-		if (data.fex != prevExpression) {
-			videoPlayer.src = `/videos/${prevExpression}${data.fex}.mp4`;
-			console.log(`${prevExpression}${data.fex}`);
+	const message = JSON.parse(event.data);
+	if (message.type === "control") {
+		if (message.fex != state.prevExpression) {
+			if (timeoutId !== null && !videoPlayer.paused) {
+				clearTimeout(timeoutId);
+			}
+			videoPlayer.src = `/videos/${state.prevExpression}${message.fex}.mp4`;
+			console.log(state.prevExpression + message.fex);
+			state.prevExpression = message.fex;
 			videoPlayer.play();
-			prevExpression = data.fex;
+			timeoutId = setTimeout(() => {
+				videoPlayer.pause();
+			}, 500);
 		}
 	}
 });

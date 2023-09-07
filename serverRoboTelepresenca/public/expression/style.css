@@ -3,11 +3,21 @@ body {
 	padding: 0;
 }
 
-.video-container {
+#video-container {
 	height: 100vh;
-    text-align: center;
+	text-align: center;
+	display: flex;
+	justify-content: center;
 }
 
 #video-player {
 	height: 95%;
+	grid-column: 1;
+}
+
+#audio-toggle {
+	margin-top: 150px;
+	width: 50px;
+	align-self: flex-start;
+	cursor: pointer
 }
