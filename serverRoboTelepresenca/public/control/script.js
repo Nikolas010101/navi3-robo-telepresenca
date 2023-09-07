@@ -4,12 +4,26 @@ const state = {
 	mic: false,
 	video: false,
 	volume: false,
+	pan: 0,
+	tilt: 0,
+	fex: "N",
 };
 
 // Audio and video players
 const audioPlayer = document.querySelector("#audio-player"),
 	videoPlayer = document.querySelector("#video-player"),
 	websocket = new WebSocket("ws://localhost:3000");
+
+websocket.addEventListener("message", (event) => {
+	const message = JSON.parse(event.data);
+	if (message.type === "control") {
+		state.pan = message.pan;
+		state.tilt = message.tilt;
+		state.fex = message.fex;
+		updateFacialExpression(message);
+		updateSliders(message);
+	}
+});
 
 // Call buttons
 const end = document.querySelector("#end");
@@ -42,21 +56,15 @@ volume.addEventListener("change", (event) => {
 // Expression buttons
 const expressionButtons = document.querySelectorAll('input[name="expression"]');
 expressionButtons.forEach((button) => {
-	button.addEventListener("change", () =>
-		fetch(`/api/fex`, {
-			method: "POST",
-			headers: {
-				"content-type": "application/json",
-			},
-			body: JSON.stringify({ fex: button.value }),
-		})
-	);
+	button.addEventListener("change", () => {
+		state.fex = button.value;
+		sendControl();
+	});
 });
 
 // Updates expression to the last value sent
-async function updateFacialExpression() {
-	const expression = await fetch("/api/fex").then((r) => r.json());
-	document.getElementById(expression.fex).checked = true;
+function updateFacialExpression(message) {
+	document.getElementById(message.fex).checked = true;
 }
 
 // Servo sliders
@@ -67,40 +75,28 @@ sliders.forEach((slider) => {
 	slider.addEventListener("input", () => {
 		const label = document.getElementById(`${slider.id}-label`);
 		label.innerHTML = `${slider.value}°`;
-		sendPosition();
+		state[slider.id] = Number(slider.value);
+		sendControl();
 	});
 });
 
-const panSlider = document.getElementById("pan");
-const panLabel = document.getElementById("pan-label");
-
-const tiltSlider = document.getElementById("tilt");
-const tiltLabel = document.getElementById("tilt-label");
-
 // Update sliders with last value sent
-async function updateSliders() {
-	const position = await fetch("/api/servo").then((r) => r.json());
+function updateSliders(message) {
 	sliders.forEach((slider) => {
-		slider.value = position[slider.id];
+		slider.value = message[slider.id];
 		document.getElementById(
 			`${slider.id}-label`
 		).innerHTML = `${slider.value}°`;
 	});
 }
 
-// Send servo position to server
-async function sendPosition() {
-	fetch("/api/servo", {
-		method: "POST",
-		headers: {
-			"content-type": "application/json",
-		},
-		body: JSON.stringify({
-			pan: Number(panSlider.value),
-			tilt: Number(tiltSlider.value),
-		}),
-	});
+async function sendControl() {
+	websocket.send(
+		JSON.stringify({
+			type: "control",
+			pan: state.pan,
+			tilt: state.tilt,
+			fex: state.fex,
+		})
+	);
 }
-
-updateFacialExpression();
-updateSliders();

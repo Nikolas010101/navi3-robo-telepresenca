@@ -30,12 +30,13 @@ wsServer.on("connection", function (connection) {
 	connection.on("message", function (message) {
 		message = JSON.parse(message.toString());
 		switch (message.type) {
-			case "audio":
-			case "video":
-				distributeData(message);
-				break;
 			case "control":
 				console.log(message);
+
+				state.pan = message.pan;
+				state.tilt = message.tilt;
+				state.fex = message.fex;
+
 				distributeData({ type: "control", ...state });
 				break;
 			default:
@@ -93,33 +94,4 @@ app.get("/control", function (req, res) {
 // Pagina para mostrar as expressões faciais
 app.get("/expression", function (req, res) {
 	res.render("pages/expression");
-});
-
-// Endpoint que retorna o último valor recebido de posição
-app.get("/api/servo", (req, res) => {
-	res.json({ pan: state.pan, tilt: state.tilt });
-});
-
-// Endpoint que retorna a expressão facial atual
-app.get("/api/fex", (req, res) => {
-	res.json({ fex: state.fex });
-});
-
-// POST
-
-// Endpoint para envio de posição
-app.post("/api/servo", (req, res) => {
-	state.pan = req.body.pan;
-	state.tilt = req.body.tilt;
-	console.log(`pan = ${state.pan}°, tilt = ${state.tilt}°`);
-	distributeData({ type: "control", ...state });
-	res.json({ pan: state.pan, tilt: state.tilt });
-});
-
-// Recebe expressao facial da pagina web e envia para conexoes ws
-app.post("/api/fex", function (req, res) {
-	state.fex = req.body.fex;
-	console.log(`expression: ${state.fex}`);
-	distributeData({ type: "control", ...state });
-	res.json({ fex: state.fex });
 });
