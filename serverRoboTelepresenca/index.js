@@ -39,6 +39,11 @@ wsServer.on("connection", function (connection) {
 
 				distributeData({ type: "control", ...state });
 				break;
+			case "face_data":
+				console.log(message);
+
+				state.fex = message.fex === "ND" ? "N" : message.fex;
+				break;
 			default:
 				console.log(`Unsupported message type: ${message.type}`);
 				break;
