@@ -1,4 +1,4 @@
-const AUDIOSOURCE = "http://localhost:8080/audio";
+const AUDIOSOURCE = "http://localhost:5050/audio";
 
 const state = {
 	mic: false,
