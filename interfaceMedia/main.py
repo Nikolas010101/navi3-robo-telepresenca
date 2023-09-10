@@ -1,7 +1,7 @@
 import cv2, pyaudio
 from time import time
 from websockets.sync.client import connect
-from flask import Flask, Response
+from flask import Flask, Response, make_response
 
 app = Flask(__name__)
 
@@ -66,8 +66,6 @@ def audio() -> Response:
 ### START VIDEO STREAMING BLOCK
 
 cap = cv2.VideoCapture(0)
-FPS = 60
-INTERVAL = 1 / FPS  # s/frame
 WIDTH, HEIGHT = 320, 240
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
@@ -75,20 +73,9 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
 @app.route("/video")
 def video() -> Response:
-    def stream_video():
-        last = time()
-        while True:
-            current = time()
-            if current - last >= INTERVAL:
-                last = time()
-                _, buffer = cap.read()
-                _, jpeg_frame = cv2.imencode(".jpg", buffer)
-                frame = jpeg_frame.tobytes()
-                yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
-
-    return Response(
-        response=stream_video(), mimetype="multipart/x-mixed-replace; boundary=frame"
-    )
+    _, buffer = cap.read()
+    _, encoded = cv2.imencode(".jpg", buffer)
+    return make_response(encoded.tobytes())
 
 
 if __name__ == "__main__":
