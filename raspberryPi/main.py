@@ -95,31 +95,27 @@ def video() -> Response:
 
 ## START SERVO CONTROL BLOCK
 
-# pi = pio.pi()
+pi = pio.pi()
 PAN_PIN = 17
 TILT_PIN = 2
-MAX_ANGLE = 60
+MAX_ANGLE = 90
 
 
-def get_pulsewidth_from_angle(angle: float) -> int:
+def get_pulsewidth_from_angle(angle: int) -> int:
     if angle > MAX_ANGLE:
         angle = MAX_ANGLE
     elif angle < -MAX_ANGLE:
         angle = -MAX_ANGLE
-    return int(500 * angle / MAX_ANGLE) + 1500
-
-
-def get_angle(period) -> float:
-    return (period - 1500) * 180 / 1000
+    return int(1000 * angle / MAX_ANGLE + 1500)
 
 
 def move_servos(pan: int, tilt: int) -> None:
     pulsewidth_pan = get_pulsewidth_from_angle(pan)
     pulsewidth_tilt = get_pulsewidth_from_angle(tilt)
 
-    # pi.set_servo_pulsewidth(PAN_PIN, period_pan)
+    pi.set_servo_pulsewidth(PAN_PIN, pulsewidth_pan)
 
-    # pi.set_servo_pulsewidth(TILT_PIN, period_tilt)
+    pi.set_servo_pulsewidth(TILT_PIN, pulsewidth_tilt)
 
 
 def listen(websocket) -> None:
