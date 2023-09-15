@@ -1,4 +1,4 @@
-const AUDIOSOURCE = "http://localhost:5050/audio";
+const AUDIOSOURCE = "http://192.168.0.102:5050/audio";
 
 const state = {
 	mic: false,
@@ -12,7 +12,7 @@ const state = {
 // Audio and video players
 const audioPlayer = document.querySelector("#audio-player"),
 	videoPlayer = document.querySelector("#video-player"),
-	websocket = new WebSocket("ws://localhost:3000");
+	websocket = new WebSocket("ws://192.168.0.100:3000");
 
 websocket.addEventListener("message", (event) => {
 	const message = JSON.parse(event.data);

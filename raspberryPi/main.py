@@ -134,7 +134,7 @@ def listen(websocket) -> None:
 ### END SERVO CONTROL BLOCK
 
 if __name__ == "__main__":
-    with connect("ws://localhost:3000") as websocket:
+    with connect("ws://192.168.0.100:3000") as websocket:
         ws_thread = threading.Thread(target=listen, args=(websocket,))
         ws_thread.start()
-        app.run(port=5050)
+        app.run(host="192.168.0.102", port=5050)

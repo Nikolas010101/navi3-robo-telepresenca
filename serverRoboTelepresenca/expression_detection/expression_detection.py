@@ -15,10 +15,10 @@ FEX_MAP = {
     "surprise": "S",
     "neutral": "N",
 }
-INTERFACE_VIDEO = "http://localhost:8080/video"
+INTERFACE_VIDEO = "http://192.168.0.100:8080/video"
 INTERVAL = 5
 
-with connect("ws://localhost:3000") as websocket:
+with connect("ws://192.168.0.100:3000") as websocket:
     last = time()
     while True:
         try:
