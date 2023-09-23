@@ -4,6 +4,7 @@
 <head>
     <%- include('../partials/head'); %>
         <link rel="stylesheet" href="/control/style.css">
+        <script defer src="/frontend_setup/setup.js"></script>
         <script defer src="/control/script.js"></script>
 </head>
 
@@ -13,7 +14,7 @@
         <div class="jumbotron">
             <h1>Controle de dispostivo embarcado</h1>
             <div class="video-container">
-                <img id="video-player" src="http://192.168.0.102:5050/video" onerror="this.src='/img/wip.png'" alt="Vídeo">
+                <img id="video-player" onerror="this.src='/img/wip.png'" alt="Vídeo">
                 <audio id="audio-player"></audio>
             </div>
             <div class="call-buttons">

@@ -1,4 +1,5 @@
-const AUDIOSOURCE = "http://192.168.0.102:5050/audio";
+const AUDIOSOURCE = `http://${ROBOTIP}:5050/audio`,
+	VIDEOSOURCE = `http://${ROBOTIP}:5050`;
 
 const state = {
 	mic: false,
@@ -12,7 +13,8 @@ const state = {
 // Audio and video players
 const audioPlayer = document.querySelector("#audio-player"),
 	videoPlayer = document.querySelector("#video-player"),
-	websocket = new WebSocket("ws://192.168.0.100:3000");
+	websocket = new WebSocket(`ws://${SERVERIP}:3000`);
+videoPlayer.src = VIDEOSOURCE;
 
 websocket.addEventListener("message", (event) => {
 	const message = JSON.parse(event.data);
