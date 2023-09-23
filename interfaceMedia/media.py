@@ -1,9 +1,8 @@
-import cv2, pyaudio
-from time import time
-from websockets.sync.client import connect
+import cv2, pyaudio, sys
 from flask import Flask, Response, make_response
 
 app = Flask(__name__)
+INTERFACEIP = sys.argv[1]
 
 ### START AUDIO STREAMING BLOCK
 
@@ -79,4 +78,4 @@ def video() -> Response:
 
 
 if __name__ == "__main__":
-    app.run(host="192.168.0.100", port=8080)
+    app.run(host=INTERFACEIP, port=8080)
