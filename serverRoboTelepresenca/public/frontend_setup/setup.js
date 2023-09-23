@@ -1,0 +1,3 @@
+const INTERFACEIP = "192.168.0.100";
+const SERVERIP = "192.168.0.100";
+const ROBOTIP = "192.168.0.102";
