@@ -18,22 +18,16 @@ app.use([express.json(), express.static("public")]);
 
 // Configuracao de servidor websocket na mesma porta do servidor web
 const wsServer = new WebSocketServer({ noServer: true });
-const interfaceMedia = spawn("python", [INTERFACEMEDIAPATH, INTERFACEIP]);
-interfaceMedia.on("spawn", (e) =>
-    console.log("interface_media spawned successfully")
-);
+const interfaceMedia = spawn("python3", [INTERFACEMEDIAPATH, INTERFACEIP]);
 interfaceMedia.on("error", (e) =>
     console.log("Error on interface_media subprocess")
 );
 
-const fexDetection = spawn("python", [
+const fexDetection = spawn("python3", [
     FEXDETECTIONPATH,
     INTERFACEIP,
     FEXINTERVAL,
 ]);
-fexDetection.on("spawn", (e) =>
-    console.log("fex_detection spawned successfully")
-);
 fexDetection.on("error", (e) =>
     console.log("Error on fex_detection subprocess")
 );
