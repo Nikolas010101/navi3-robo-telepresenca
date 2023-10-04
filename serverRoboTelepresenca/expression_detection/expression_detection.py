@@ -2,7 +2,7 @@ import cv2, numpy as np, urllib.request as urllib, json, sys
 from rmn import RMN
 from time import sleep
 
-FACEDETECTORPATH = ""
+FACEDETECTORPATH = "/home/nikolas/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/expression_detection/haarcascade_frontalface_default.xml"
 INTERFACEIP = sys.argv[1]
 INTERVAL = float(sys.argv[2])
 
@@ -18,7 +18,6 @@ FEX_MAP = {
     "surprise": "S",
     "neutral": "N",
 }
-# INTERFACE_VIDEO = "http://192.168.0.100:8080/video"
 INTERFACE_VIDEO = f"http://{INTERFACEIP}:8080/video"
 
 while True:
