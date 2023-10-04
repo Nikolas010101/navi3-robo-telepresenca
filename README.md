@@ -30,3 +30,4 @@
 -   Change directory to raspberryPi
 -   Update the IPs on the main.py file
 -   Run main.py (make sure server is running, otherwise one of the threads will crash)
+-   To access the current facial expression open http://{SERVERIP}:3000/expression
