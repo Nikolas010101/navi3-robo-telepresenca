@@ -1,5 +1,5 @@
 const AUDIOSOURCE = `http://${ROBOTIP}:5050/audio`,
-	VIDEOSOURCE = `http://${ROBOTIP}:5050`;
+	VIDEOSOURCE = `http://${ROBOTIP}:5050/video`;
 
 const state = {
 	mic: false,
