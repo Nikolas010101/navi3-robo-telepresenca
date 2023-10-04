@@ -27,6 +27,7 @@
 
 ### On the robot/raspberry side
 
+-   Run sudo pigpiod
 -   Change directory to raspberryPi
 -   Update the IPs on the main.py file
 -   Run main.py (make sure server is running, otherwise one of the threads will crash)
