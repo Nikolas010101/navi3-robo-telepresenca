@@ -1,64 +1,71 @@
-import json, cv2, pyaudio, threading, pigpio as pio
-from time import time
+import json, cv2, pyaudio, pigpio as pio, base64, time
+from threading import Thread
 from websockets.sync.client import connect
-from flask import Flask, Response
+from websockets.exceptions import InvalidURI, InvalidHandshake, ConnectionClosedError
 
-app = Flask(__name__)
+
+with open(
+    "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
+    "r",
+) as file:
+    setup: dict = json.load(file)
+    SERVER_IP: str = setup["SERVER_IP"]
+
 
 ### START AUDIO STREAMING BLOCK
 
-FORMAT = pyaudio.paInt16
-CHUNK = 1024
-BPS = 16
-CHANNELS = 1
-RATE = 44100
+# FORMAT = pyaudio.paInt16
+# CHUNK = 1024
+# BPS = 16
+# CHANNELS = 1
+# RATE = 44100
 
-audio_object = pyaudio.PyAudio()
-stream = audio_object.open(
-    format=FORMAT,
-    channels=CHANNELS,
-    rate=RATE,
-    input=True,
-    frames_per_buffer=CHUNK,
-)
-
-
-def gen_audio_header(sample_rate: int, bits_per_sample: int, channels: int) -> bytes:
-    datasize: int = 2 * 10**9
-    o: bytes = b"RIFF"  # (4byte) Marks file as RIFF
-    o += (
-        datasize + 36
-    ).to_bytes(  # (4byte) File size in bytes excluding this and RIFF marker
-        4, "little"
-    )
-    o += b"WAVE"  # (4byte) File type
-    o += b"fmt "  # (4byte) Format Chunk Marker
-    o += (16).to_bytes(4, "little")  # (4byte) Length of above format data
-    o += (1).to_bytes(2, "little")  # (2byte) Format type (1 - PCM)
-    o += (channels).to_bytes(2, "little")  # (2byte)
-    o += (sample_rate).to_bytes(4, "little")  # (4byte)
-    o += (sample_rate * channels * bits_per_sample // 8).to_bytes(
-        4, "little"
-    )  # (4byte)
-    o += (channels * bits_per_sample // 8).to_bytes(2, "little")  # (2byte)
-    o += (bits_per_sample).to_bytes(2, "little")  # (2byte)
-    o += b"data"  # (4byte) Data Chunk Marker
-    o += (datasize).to_bytes(4, "little")  # (4byte) Data size in bytes
-    return o
+# audio_object = pyaudio.PyAudio()
+# stream = audio_object.open(
+#     format=FORMAT,
+#     channels=CHANNELS,
+#     rate=RATE,
+#     input=True,
+#     frames_per_buffer=CHUNK,
+# )
 
 
-@app.route("/audio")
-def audio() -> Response:
-    def stream_mic():
-        wav_header = gen_audio_header(
-            sample_rate=RATE, bits_per_sample=BPS, channels=CHANNELS
-        )
-        yield wav_header
-        while True:
-            data = stream.read(CHUNK)
-            yield data
+# def gen_audio_header(sample_rate: int, bits_per_sample: int, channels: int) -> bytes:
+#     datasize: int = 2 * 10**9
+#     o: bytes = b"RIFF"  # (4byte) Marks file as RIFF
+#     o += (
+#         datasize + 36
+#     ).to_bytes(  # (4byte) File size in bytes excluding this and RIFF marker
+#         4, "little"
+#     )
+#     o += b"WAVE"  # (4byte) File type
+#     o += b"fmt "  # (4byte) Format Chunk Marker
+#     o += (16).to_bytes(4, "little")  # (4byte) Length of above format data
+#     o += (1).to_bytes(2, "little")  # (2byte) Format type (1 - PCM)
+#     o += (channels).to_bytes(2, "little")  # (2byte)
+#     o += (sample_rate).to_bytes(4, "little")  # (4byte)
+#     o += (sample_rate * channels * bits_per_sample // 8).to_bytes(
+#         4, "little"
+#     )  # (4byte)
+#     o += (channels * bits_per_sample // 8).to_bytes(2, "little")  # (2byte)
+#     o += (bits_per_sample).to_bytes(2, "little")  # (2byte)
+#     o += b"data"  # (4byte) Data Chunk Marker
+#     o += (datasize).to_bytes(4, "little")  # (4byte) Data size in bytes
+#     return o
 
-    return Response(response=stream_mic(), content_type="audio/wav")
+
+# @app.route("/audio")
+# def audio() -> Response:
+#     def stream_mic():
+#         wav_header = gen_audio_header(
+#             sample_rate=RATE, bits_per_sample=BPS, channels=CHANNELS
+#         )
+#         yield wav_header
+#         while True:
+#             data = stream.read(CHUNK)
+#             yield data
+
+#     return Response(response=stream_mic(), content_type="audio/wav")
 
 
 ### END AUDIO STREAMING BLOCK
@@ -73,22 +80,28 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
 
-@app.route("/video")
-def video() -> Response:
-    def stream_video():
-        last = time()
-        while True:
-            current = time()
-            if current - last >= INTERVAL:
-                last = time()
-                _, buffer = cap.read()
-                _, jpeg_frame = cv2.imencode(".jpg", buffer)
-                frame = jpeg_frame.tobytes()
-                yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+def send_video() -> None:
+    while True:
+        try:
+            with connect(f"ws://{SERVER_IP}:3000") as websocket:
+                while True:
+                    # Capture video
+                    ok, frame = cap.read()
+                    if not ok:
+                        continue
 
-    return Response(
-        response=stream_video(), mimetype="multipart/x-mixed-replace; boundary=frame"
-    )
+                    ok, video_buffer = cv2.imencode(".jpg", frame)
+                    if not ok:
+                        continue
+
+                    video = base64.b64encode(video_buffer).decode("utf-8")
+
+                    websocket.send(json.dumps({"type": "robot_video", "media": video}))
+
+                    cv2.waitKey(1)
+        except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
+            print(f"Could not send frame to server, error: {e}")
+            time.sleep(2)
 
 
 ### END VIDEO STREAMING BLOCK
@@ -118,19 +131,24 @@ def move_servos(pan: int, tilt: int) -> None:
     pi.set_servo_pulsewidth(TILT_PIN, pulsewidth_tilt)
 
 
-def listen(websocket) -> None:
+def listen() -> None:
     while True:
-        data = json.loads(websocket.recv())
-        if data["type"] == "control":
-            pan, tilt = data["pan"], data["tilt"]
-            print(f"Pan: {pan}, Tilt: {tilt}")
-            move_servos(pan, tilt)
+        try:
+            with connect(f"ws://{SERVER_IP}:3000") as websocket:
+                while True:
+                    data = json.loads(websocket.recv())
+                    if data["type"] == "control":
+                        pan, tilt = data["pan"], data["tilt"]
+                        print(f"Pan: {pan}, Tilt: {tilt}")
+                        move_servos(pan, tilt)
+        except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
+            print(f"Could not connect to server, error: {e}")
+            time.sleep(2)
 
 
 ### END SERVO CONTROL BLOCK
+listen_thread = Thread(target=listen)
+listen_thread.start()
 
-if __name__ == "__main__":
-    with connect("ws://192.168.0.100:3000") as websocket:
-        ws_thread = threading.Thread(target=listen, args=(websocket,))
-        ws_thread.start()
-        app.run(host="192.168.0.102", port=5050)
+video_thread = Thread(target=send_video)
+video_thread.start()
