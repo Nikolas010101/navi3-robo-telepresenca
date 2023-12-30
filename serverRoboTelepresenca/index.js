@@ -2,15 +2,17 @@ import express from "express";
 import { WebSocket, WebSocketServer } from "ws";
 import { v4 } from "uuid";
 import { spawn } from "child_process";
-import {
-    INTERFACEMEDIAPATH,
-    FEXDETECTIONPATH,
-    INTERFACEIP,
-    FEXINTERVAL,
-} from "./public/server_setup/setup.js";
+import { readFileSync } from "fs";
 
 const app = express();
 const port = process.env.port || 3000;
+
+const SETUP = JSON.parse(
+    readFileSync(
+        "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
+        "utf-8"
+    )
+);
 
 // Middleware
 app.set("view engine", "ejs");
@@ -18,27 +20,7 @@ app.use([express.json(), express.static("public")]);
 
 // Configuracao de servidor websocket na mesma porta do servidor web
 const wsServer = new WebSocketServer({ noServer: true });
-const interfaceMedia = spawn("python3", [INTERFACEMEDIAPATH, INTERFACEIP]);
-interfaceMedia.on("error", (e) =>
-    console.log("Error on interface_media subprocess")
-);
 
-const fexDetection = spawn("python3", [
-    FEXDETECTIONPATH,
-    INTERFACEIP,
-    FEXINTERVAL,
-]);
-fexDetection.on("error", (e) =>
-    console.log("Error on fex_detection subprocess")
-);
-fexDetection.stdout.on("data", (data) => {
-    const message = JSON.parse(data.toString());
-
-    console.log(message);
-
-    state.fex = message.fex === "ND" ? "N" : message.fex;
-    distributeData({ type: "control", ...state });
-});
 const server = app.listen(port);
 
 // Handling de request do servidor soquete
@@ -60,6 +42,13 @@ wsServer.on("connection", function (connection) {
                 state.fex = message.fex;
 
                 distributeData({ type: "control", ...state });
+                break;
+            case "fex":
+                console.log(message);
+
+                state.fex = message.fex;
+
+                distributeData(message);
                 break;
             default:
                 console.log(`Unsupported message type: ${message.type}`);
