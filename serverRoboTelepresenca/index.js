@@ -2,15 +2,25 @@ import express from "express";
 import { WebSocket, WebSocketServer } from "ws";
 import { v4 } from "uuid";
 import { spawn } from "child_process";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 
 const app = express();
 const port = process.env.port || 3000;
 
+// reads setup.json
 const SETUP = JSON.parse(
     readFileSync(
         "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
         "utf-8"
+    )
+);
+
+// updates setup.js
+writeFileSync(
+    "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/frontend_setup/setup.js",
+    Object.entries(SETUP).reduce(
+        (acc, [k, v]) => acc + `const ${k} = "${v}"\n`,
+        ""
     )
 );
 
@@ -46,7 +56,7 @@ wsServer.on("connection", function (connection) {
             case "fex":
                 console.log(message);
 
-                state.fex = message.fex;
+                state.fex = message.fex === "ND" ? "N" : message.fex;
 
                 distributeData(message);
                 break;
