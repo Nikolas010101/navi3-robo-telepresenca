@@ -51,13 +51,16 @@ wsServer.on("connection", function (connection) {
                 state.tilt = message.tilt;
                 state.fex = message.fex;
 
-                distributeData({ type: "control", ...state });
+                distributeData(message);
                 break;
             case "fex":
                 console.log(message);
 
                 state.fex = message.fex === "ND" ? "N" : message.fex;
 
+                distributeData(message);
+                break;
+            case "robot_video":
                 distributeData(message);
                 break;
             default:
