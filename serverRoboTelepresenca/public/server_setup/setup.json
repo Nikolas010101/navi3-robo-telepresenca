@@ -1,5 +1,9 @@
 {
     "INTERFACE_IP": "localhost",
     "SERVER_IP": "localhost",
-    "ROBOT_IP": "localhost"
+    "ROBOT_IP": "localhost",
+    "CHUNK": 1024,
+    "BPS": 16,
+    "CHANNELS": 1,
+    "RATE": 44100
 }

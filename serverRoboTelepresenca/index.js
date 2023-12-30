@@ -60,6 +60,7 @@ wsServer.on("connection", function (connection) {
 
                 distributeData(message);
                 break;
+            case "robot_audio":
             case "robot_video":
                 distributeData(message);
                 break;
