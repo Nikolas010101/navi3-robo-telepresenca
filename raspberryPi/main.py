@@ -10,62 +10,34 @@ with open(
 ) as file:
     setup: dict = json.load(file)
     SERVER_IP: str = setup["SERVER_IP"]
-
+    CHUNK: int = setup["CHUNK"]
+    BPS: int = setup["BPS"]
+    CHANNELS: int = setup["CHANNELS"]
+    RATE: int = setup["RATE"]
 
 ### START AUDIO STREAMING BLOCK
 
-# FORMAT = pyaudio.paInt16
-# CHUNK = 1024
-# BPS = 16
-# CHANNELS = 1
-# RATE = 44100
-
-# audio_object = pyaudio.PyAudio()
-# stream = audio_object.open(
-#     format=FORMAT,
-#     channels=CHANNELS,
-#     rate=RATE,
-#     input=True,
-#     frames_per_buffer=CHUNK,
-# )
+FORMAT = pyaudio.paInt16
+audio_object = pyaudio.PyAudio()
+stream = audio_object.open(
+    format=FORMAT,
+    channels=CHANNELS,
+    rate=RATE,
+    input=True,
+    frames_per_buffer=CHUNK,
+)
 
 
-# def gen_audio_header(sample_rate: int, bits_per_sample: int, channels: int) -> bytes:
-#     datasize: int = 2 * 10**9
-#     o: bytes = b"RIFF"  # (4byte) Marks file as RIFF
-#     o += (
-#         datasize + 36
-#     ).to_bytes(  # (4byte) File size in bytes excluding this and RIFF marker
-#         4, "little"
-#     )
-#     o += b"WAVE"  # (4byte) File type
-#     o += b"fmt "  # (4byte) Format Chunk Marker
-#     o += (16).to_bytes(4, "little")  # (4byte) Length of above format data
-#     o += (1).to_bytes(2, "little")  # (2byte) Format type (1 - PCM)
-#     o += (channels).to_bytes(2, "little")  # (2byte)
-#     o += (sample_rate).to_bytes(4, "little")  # (4byte)
-#     o += (sample_rate * channels * bits_per_sample // 8).to_bytes(
-#         4, "little"
-#     )  # (4byte)
-#     o += (channels * bits_per_sample // 8).to_bytes(2, "little")  # (2byte)
-#     o += (bits_per_sample).to_bytes(2, "little")  # (2byte)
-#     o += b"data"  # (4byte) Data Chunk Marker
-#     o += (datasize).to_bytes(4, "little")  # (4byte) Data size in bytes
-#     return o
-
-
-# @app.route("/audio")
-# def audio() -> Response:
-#     def stream_mic():
-#         wav_header = gen_audio_header(
-#             sample_rate=RATE, bits_per_sample=BPS, channels=CHANNELS
-#         )
-#         yield wav_header
-#         while True:
-#             data = stream.read(CHUNK)
-#             yield data
-
-#     return Response(response=stream_mic(), content_type="audio/wav")
+def send_audio() -> None:
+    while True:
+        try:
+            with connect(f"ws://{SERVER_IP}:3000") as websocket:
+                while True:
+                    data = base64.b64encode(stream.read(CHUNK)).decode("utf-8")
+                    websocket.send(json.dumps({"type": "robot_audio", "media": data}))
+        except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
+            print(f"Could not send audio to server, error: {e}")
+            time.sleep(2)
 
 
 ### END AUDIO STREAMING BLOCK
@@ -85,7 +57,6 @@ def send_video() -> None:
         try:
             with connect(f"ws://{SERVER_IP}:3000") as websocket:
                 while True:
-                    # Capture video
                     ok, frame = cap.read()
                     if not ok:
                         continue
@@ -95,9 +66,7 @@ def send_video() -> None:
                         continue
 
                     video = base64.b64encode(video_buffer).decode("utf-8")
-
                     websocket.send(json.dumps({"type": "robot_video", "media": video}))
-
                     cv2.waitKey(1)
         except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
             print(f"Could not send frame to server, error: {e}")
@@ -152,3 +121,6 @@ listen_thread.start()
 
 video_thread = Thread(target=send_video)
 video_thread.start()
+
+audio_thread = Thread(target=send_audio)
+audio_thread.start()
