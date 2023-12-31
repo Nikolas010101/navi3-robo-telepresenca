@@ -160,12 +160,10 @@ app.get("/expression", function (req, res) {
 });
 
 const expressionDetection = spawn("python3", [
-    "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/expression_detection/expression_detection.py",
+    SETUP.EXPRESSION_DETECTION_PROGRAM,
 ]);
 
-const interfaceMedia = spawn("python3", [
-    "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/interface_media/media.py",
-]);
+const interfaceMedia = spawn("python3", [SETUP.INTERFACE_MEDIA_PROGRAM]);
 
 process.on("SIGINT", () => {
     console.log("Server is killing subprocesses before terminating");

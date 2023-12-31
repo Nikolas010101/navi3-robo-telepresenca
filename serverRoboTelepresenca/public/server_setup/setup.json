@@ -5,5 +5,9 @@
     "BPS": 16,
     "CHANNELS": 1,
     "RATE": 44100,
-    "INTERVAL": 1
+    "INTERVAL": 1,
+    "WIDTH": 320,
+    "HEIGHT": 240,
+    "EXPRESSION_DETECTION_PROGRAM": "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/expression_detection/expression_detection.py",
+    "INTERFACE_MEDIA_PROGRAM": "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/interface_media/media.py"
 }
