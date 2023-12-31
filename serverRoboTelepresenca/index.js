@@ -50,16 +50,12 @@ wsServer.on("connection", function (connection) {
                 state.pan = message.pan;
                 state.tilt = message.tilt;
                 state.fex = message.fex;
-                state.interfaceAudio = message.interfaceAudio;
-                state.interfaceVideo = message.interfaceVideo;
 
                 distributeData({
                     type: "control",
                     pan: state.pan,
                     tilt: state.tilt,
                     fex: state.fex,
-                    interfaceAudio: state.interfaceAudio,
-                    interfaceVideo: state.interfaceVideo,
                 });
                 break;
             case "fex":
@@ -68,6 +64,18 @@ wsServer.on("connection", function (connection) {
                 state.fex = message.fex === "ND" ? "N" : message.fex;
 
                 distributeData({ type: "fex", fex: state.fex });
+                break;
+            case "interface_state":
+                console.log(message);
+
+                state.interfaceAudio = message.interfaceAudio;
+                state.interfaceVideo = message.interfaceVideo;
+
+                distributeData({
+                    type: "interface_state",
+                    interfaceAudio: state.interfaceAudio,
+                    interfaceVideo: state.interfaceVideo,
+                });
                 break;
             case "interface_audio":
                 if (state.interfaceAudio) {
@@ -88,7 +96,17 @@ wsServer.on("connection", function (connection) {
                 break;
         }
     });
-    distributeData({ type: "control", ...state });
+    distributeData({
+        type: "control",
+        pan: state.pan,
+        tilt: state.tilt,
+        fex: state.fex,
+    });
+    distributeData({
+        type: "interface_state",
+        interfaceAudio: state.interfaceAudio,
+        interfaceVideo: state.interfaceVideo,
+    });
 });
 
 // Mudanca de protocolo de http para ws

@@ -27,6 +27,11 @@ websocket.addEventListener("message", (event) => {
             updateFacialExpression(message);
             updateButtons(message);
             break;
+        case "interface_state":
+            state.video = message.interfaceVideo;
+            state.mic = message.interfaceAudio;
+            updateButtons(message);
+            break;
         case "robot_video":
             const videoBlob = base64ToBlob(message.media);
             const frameURL = URL.createObjectURL(videoBlob);
@@ -140,13 +145,13 @@ end.addEventListener("change", () => (location.href = "/"));
 const mic = document.querySelector("#mic");
 mic.addEventListener("change", (event) => {
     state.mic = event.target.checked;
-    sendControl();
+    sendInterfaceState();
 });
 
 const video = document.querySelector("#video");
 video.addEventListener("change", (event) => {
     state.video = event.target.checked;
-    sendControl();
+    sendInterfaceState();
 });
 
 const audio = document.querySelector("#volume");
@@ -158,8 +163,6 @@ audio.addEventListener("change", (event) => {
     state.volume = event.target.checked;
     gainNode.gain.value = state.volume ? 1 : 0;
 });
-
-const volume = document.querySelector("#volume");
 
 // Expression buttons
 const expressionButtons = document.querySelectorAll('input[name="expression"]');
@@ -190,17 +193,17 @@ sliders.forEach((slider) => {
 
 // Update buttons with server state
 function updateButtons(message) {
-    sliders.forEach((slider) => {
-        slider.value = message[slider.id];
-        document.getElementById(
-            `${slider.id}-label`
-        ).innerHTML = `${slider.value}°`;
-    });
-    state.video = message.interfaceVideo;
-    video.checked = state.video;
-
-    state.mic = message.interfaceAudio;
-    mic.checked = state.mic;
+    if (message.type === "control") {
+        sliders.forEach((slider) => {
+            slider.value = message[slider.id];
+            document.getElementById(
+                `${slider.id}-label`
+            ).innerHTML = `${slider.value}°`;
+        });
+    } else if (message.type === "interface_state") {
+        video.checked = state.video;
+        mic.checked = state.mic;
+    }
 }
 
 async function sendControl() {
@@ -210,6 +213,14 @@ async function sendControl() {
             pan: state.pan,
             tilt: state.tilt,
             fex: state.fex,
+        })
+    );
+}
+
+async function sendInterfaceState() {
+    websocket.send(
+        JSON.stringify({
+            type: "interface_state",
             interfaceAudio: state.mic,
             interfaceVideo: state.video,
         })
