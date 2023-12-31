@@ -51,14 +51,19 @@ wsServer.on("connection", function (connection) {
                 state.tilt = message.tilt;
                 state.fex = message.fex;
 
-                distributeData(message);
+                distributeData({
+                    type: "control",
+                    pan: state.pan,
+                    tilt: state.tilt,
+                    fex: state.fex,
+                });
                 break;
             case "fex":
                 console.log(message);
 
                 state.fex = message.fex === "ND" ? "N" : message.fex;
 
-                distributeData(message);
+                distributeData({ type: "fex", fex: state.fex });
                 break;
             case "robot_audio":
             case "interface_audio":
