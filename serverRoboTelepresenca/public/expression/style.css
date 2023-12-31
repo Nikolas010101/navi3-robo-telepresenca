@@ -1,23 +1,18 @@
 body {
-	margin: 0;
-	padding: 0;
+    margin: 0;
+    padding: 0;
 }
-
-#video-container {
-	height: 100vh;
-	text-align: center;
-	display: flex;
-	justify-content: center;
-}
-
 #video-player {
-	height: 95%;
-	grid-column: 1;
+    height: 100vh;
+    margin: auto;
+    display: block;
 }
-
 #audio-toggle {
-	margin-top: 150px;
-	width: 50px;
-	align-self: flex-start;
-	cursor: pointer;
+    width: 5em;
+    position: fixed;
+    top: 5em;
+    right: 5em;
+}
+#audio-toggle:hover {
+    cursor: pointer;
 }
