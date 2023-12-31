@@ -150,7 +150,6 @@ audio.addEventListener("change", (event) => {
         gainNode = audioContext.createGain();
     }
     state.volume = event.target.checked;
-    audioContext.mute = state.volume;
     gainNode.gain.value = state.volume ? 1 : 0;
 });
 
