@@ -1,9 +1,9 @@
 {
-    "INTERFACE_IP": "localhost",
     "SERVER_IP": "localhost",
     "ROBOT_IP": "localhost",
     "CHUNK": 2048,
     "BPS": 16,
     "CHANNELS": 1,
-    "RATE": 44100
+    "RATE": 44100,
+    "INTERVAL": 1
 }
