@@ -50,12 +50,16 @@ wsServer.on("connection", function (connection) {
                 state.pan = message.pan;
                 state.tilt = message.tilt;
                 state.fex = message.fex;
+                state.interfaceAudio = message.interfaceAudio;
+                state.interfaceVideo = message.interfaceVideo;
 
                 distributeData({
                     type: "control",
                     pan: state.pan,
                     tilt: state.tilt,
                     fex: state.fex,
+                    interfaceAudio: state.interfaceAudio,
+                    interfaceVideo: state.interfaceVideo,
                 });
                 break;
             case "fex":
@@ -65,10 +69,18 @@ wsServer.on("connection", function (connection) {
 
                 distributeData({ type: "fex", fex: state.fex });
                 break;
-            case "robot_audio":
             case "interface_audio":
-            case "robot_video":
+                if (state.interfaceAudio) {
+                    distributeData(message);
+                }
+                break;
             case "interface_video":
+                if (state.interfaceVideo) {
+                    distributeData(message);
+                }
+                break;
+            case "robot_audio":
+            case "robot_video":
                 distributeData(message);
                 break;
             default:
@@ -108,6 +120,8 @@ const state = {
     pan: 0,
     tilt: 0,
     fex: "N",
+    interfaceAudio: false,
+    interfaceVideo: false,
 };
 
 // GET

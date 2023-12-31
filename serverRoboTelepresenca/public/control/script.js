@@ -16,12 +16,16 @@ let audioContext = null,
 websocket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
     switch (message.type) {
+        case "fex":
+            state.fex = message.fex;
+            updateFacialExpression(message);
+            break;
         case "control":
             state.pan = message.pan;
             state.tilt = message.tilt;
             state.fex = message.fex;
             updateFacialExpression(message);
-            updateSliders(message);
+            updateButtons(message);
             break;
         case "robot_video":
             const videoBlob = base64ToBlob(message.media);
@@ -136,11 +140,13 @@ end.addEventListener("change", () => (location.href = "/"));
 const mic = document.querySelector("#mic");
 mic.addEventListener("change", (event) => {
     state.mic = event.target.checked;
+    sendControl();
 });
 
 const video = document.querySelector("#video");
 video.addEventListener("change", (event) => {
     state.video = event.target.checked;
+    sendControl();
 });
 
 const audio = document.querySelector("#volume");
@@ -182,14 +188,19 @@ sliders.forEach((slider) => {
     });
 });
 
-// Update sliders with last value sent
-function updateSliders(message) {
+// Update buttons with server state
+function updateButtons(message) {
     sliders.forEach((slider) => {
         slider.value = message[slider.id];
         document.getElementById(
             `${slider.id}-label`
         ).innerHTML = `${slider.value}°`;
     });
+    state.video = message.interfaceVideo;
+    video.checked = state.video;
+
+    state.mic = message.interfaceAudio;
+    mic.checked = state.mic;
 }
 
 async function sendControl() {
@@ -199,6 +210,8 @@ async function sendControl() {
             pan: state.pan,
             tilt: state.tilt,
             fex: state.fex,
+            interfaceAudio: state.mic,
+            interfaceVideo: state.video,
         })
     );
 }
