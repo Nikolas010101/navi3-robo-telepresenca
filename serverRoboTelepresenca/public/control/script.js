@@ -1,19 +1,17 @@
 const state = {
-    mic: false,
-    video: false,
-    volume: false,
-    pan: 0,
-    tilt: 0,
-    fex: "N",
-};
+        mic: false,
+        video: false,
+        volume: false,
+        pan: 0,
+        tilt: 0,
+        fex: "N",
+    },
+    header = genAudioHeader(Number(RATE), Number(BPS), Number(CHANNELS)),
+    videoPlayer = document.querySelector("#video-player"),
+    websocket = new WebSocket(`ws://${SERVER_IP}:3000`);
 
-const header = genAudioHeader(44100, 16, 1);
 let audioContext = null,
     gainNode = null;
-
-// Audio and video players
-const videoPlayer = document.querySelector("#video-player"),
-    websocket = new WebSocket(`ws://${SERVER_IP}:3000`);
 
 websocket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
