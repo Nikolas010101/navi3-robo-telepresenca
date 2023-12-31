@@ -45,8 +45,6 @@ def send_audio() -> None:
 ### START VIDEO STREAMING BLOCK
 
 cap = cv2.VideoCapture(0)
-FPS = 60
-INTERVAL = 1 / FPS  # s/frame
 WIDTH, HEIGHT = 320, 240
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
