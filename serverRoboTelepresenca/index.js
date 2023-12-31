@@ -61,7 +61,9 @@ wsServer.on("connection", function (connection) {
                 distributeData(message);
                 break;
             case "robot_audio":
+            case "interface_audio":
             case "robot_video":
+            case "interface_video":
                 distributeData(message);
                 break;
             default:
@@ -132,5 +134,5 @@ process.on("SIGINT", () => {
     console.log("Server is killing subprocesses before terminating");
     expressionDetection.kill();
     interfaceMedia.kill();
-    process.exit()
+    process.exit();
 });
