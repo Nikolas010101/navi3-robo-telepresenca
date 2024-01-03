@@ -77,7 +77,7 @@ def send_video() -> None:
 
 pi = pio.pi()
 PAN_PIN = 17
-TILT_PIN = 2
+TILT_PIN = 27
 MAX_ANGLE = 90
 
 
