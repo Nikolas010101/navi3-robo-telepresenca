@@ -1,5 +1,5 @@
-const SERVER_IP = "localhost"
-const ROBOT_IP = "localhost"
+const SERVER_IP = "192.168.0.101"
+const ROBOT_IP = "192.168.0.103"
 const CHUNK = "2048"
 const BPS = "16"
 const CHANNELS = "1"

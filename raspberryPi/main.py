@@ -5,7 +5,7 @@ from websockets.exceptions import InvalidURI, InvalidHandshake, ConnectionClosed
 
 
 with open(
-    "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
+    "/home/pi/Desktop/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
     "r",
 ) as file:
     setup: dict = json.load(file)
