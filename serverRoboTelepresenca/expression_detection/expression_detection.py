@@ -125,7 +125,7 @@ while True:
                                         {
                                             "type": "control",
                                             "pan": int(pan),
-                                            "tilt": int(tilt),
+                                            "tilt": 0,
                                             "fex": FEX_MAP[detected_fex[0]],
                                         }
                                     )

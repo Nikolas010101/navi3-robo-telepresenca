@@ -49,7 +49,7 @@ wsServer.on("connection", function (connection) {
 
                 state.pan = message.pan;
                 state.tilt = message.tilt;
-                state.fex = message.fex;
+                state.fex = message.fex === "ND" ? "N" : message.fex;
 
                 distributeData({
                     type: "control",
