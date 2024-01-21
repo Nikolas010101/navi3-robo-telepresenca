@@ -3,19 +3,18 @@ from websockets.sync.client import connect
 from websockets.exceptions import InvalidURI, InvalidHandshake, ConnectionClosedError
 from rmn import RMN
 from mediapipe import solutions
-
-
-FACE_DETECTOR_PATH = "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/expression_detection/haarcascade_frontalface_default.xml"
+from os.path import join, abspath
 
 with open(
-    "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
+    abspath(join(__file__, "../../public/server_setup/setup.json")),
     "r",
 ) as file:
-    setup: dict = json.load(file)
-    SERVER_IP: str = setup["SERVER_IP"]
-    INTERVAL: int = setup["INTERVAL"]
-    WIDTH: int = setup["WIDTH"]
-    HEIGHT: int = setup["HEIGHT"]
+    SETUP: dict = json.load(file)
+    SERVER_IP: str = SETUP["SERVER_IP"]
+    INTERVAL: int = SETUP["INTERVAL"]
+    WIDTH: int = SETUP["WIDTH"]
+    HEIGHT: int = SETUP["HEIGHT"]
+    FACE_DETECTOR_PATH: str = SETUP["FACE_DETECTOR_PATH"]
 
 
 class Landmark:

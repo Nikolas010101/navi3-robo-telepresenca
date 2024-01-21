@@ -2,24 +2,59 @@ import express from "express";
 import { WebSocket, WebSocketServer } from "ws";
 import { v4 } from "uuid";
 import { spawn } from "child_process";
-import { readFileSync, writeFileSync } from "fs";
+import { writeFileSync } from "fs";
+import { networkInterfaces } from "os";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const interfaces = networkInterfaces();
+const ip = Object.keys(interfaces).reduce((result, name) => {
+    const addresses = interfaces[name]
+        .filter((net) => net.family === "IPv4" && !net.internal)
+        .map((net) => net.address);
+    return addresses.length ? addresses[0] : result;
+});
 
 const app = express();
-const port = process.env.port || 3000;
+const port = 3000;
 
-// reads setup.json
-const SETUP = JSON.parse(
-    readFileSync(
-        "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
-        "utf-8"
-    )
+const SETUP = {
+    SERVER_IP: ip,
+    ROBOT_IP: "localhost",
+    CHUNK: 8192,
+    BPS: 16,
+    CHANNELS: 1,
+    RATE: 44100,
+    INTERVAL: 1,
+    WIDTH: 320,
+    HEIGHT: 240,
+    EXPRESSION_DETECTION_PROGRAM: join(
+        __dirname,
+        "expression_detection/expression_detection.py"
+    ),
+    FACE_DETECTOR_PATH: join(
+        __dirname,
+        "expression_detection/haarcascade_frontalface_default.xml"
+    ),
+    INTERFACE_MEDIA_PROGRAM: join(__dirname, "../interface_media/media.py"),
+};
+
+// writes to setup.json
+writeFileSync(
+    join(__dirname, "public/server_setup/setup.json"),
+    JSON.stringify(SETUP, null, 4)
 );
 
 // updates setup.js
 writeFileSync(
-    "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/frontend_setup/setup.js",
+    join(__dirname, "public/frontend_setup/setup.js"),
     Object.entries(SETUP).reduce(
-        (acc, [k, v]) => acc + `const ${k} = "${v}"\n`,
+        (acc, [k, v]) =>
+            acc +
+            `const ${k} = ${typeof v === "number" ? String(v) : `"${v}"`} \n`,
         ""
     )
 );

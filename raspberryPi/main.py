@@ -2,18 +2,20 @@ import json, cv2, pyaudio, pigpio as pio, base64, time
 from threading import Thread
 from websockets.sync.client import connect
 from websockets.exceptions import InvalidURI, InvalidHandshake, ConnectionClosedError
-
+from os.path import join, abspath
 
 with open(
-    "/home/pi/Desktop/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/public/server_setup/setup.json",
+    abspath(join(__file__, "../../serverRoboTelepresenca/public/server_setup/setup.json")),
     "r",
 ) as file:
-    setup: dict = json.load(file)
-    SERVER_IP: str = setup["SERVER_IP"]
-    CHUNK: int = setup["CHUNK"]
-    BPS: int = setup["BPS"]
-    CHANNELS: int = setup["CHANNELS"]
-    RATE: int = setup["RATE"]
+    SETUP: dict = json.load(file)
+    SERVER_IP: str = SETUP["SERVER_IP"]
+    CHUNK: int = SETUP["CHUNK"]
+    BPS: int = SETUP["BPS"]
+    CHANNELS: int = SETUP["CHANNELS"]
+    RATE: int = SETUP["RATE"]
+    WIDTH: int = SETUP["WIDTH"]
+    HEIGHT: int = SETUP["HEIGHT"]
 
 ### START AUDIO STREAMING BLOCK
 
@@ -45,7 +47,6 @@ def send_audio() -> None:
 ### START VIDEO STREAMING BLOCK
 
 cap = cv2.VideoCapture(0)
-WIDTH, HEIGHT = 320, 240
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
