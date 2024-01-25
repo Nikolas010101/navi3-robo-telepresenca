@@ -12,40 +12,51 @@ const __dirname = dirname(__filename);
 
 const interfaces = networkInterfaces();
 const ip = Object.keys(interfaces).reduce((result, name) => {
-    const addresses = interfaces[name]
-        .filter((net) => net.family === "IPv4" && !net.internal)
-        .map((net) => net.address);
-    return addresses.length ? addresses[0] : result;
+	const addresses = interfaces[name]
+		.filter((net) => net.family === "IPv4" && !net.internal)
+		.map((net) => net.address);
+	return addresses.length ? addresses[0] : result;
 });
 
 const app = express();
 const port = 3000;
 
 const SETUP = {
-    SERVER_IP: ip,
-    ROBOT_IP: "localhost",
-    CHUNK: 8192,
-    BPS: 16,
-    CHANNELS: 1,
-    RATE: 44100,
-    INTERVAL: 1,
-    WIDTH: 320,
-    HEIGHT: 240,
-    EXPRESSION_DETECTION_PROGRAM: join(__dirname, "expression_detection/expression_detection.py"),
-    FACE_DETECTOR_PATH: join(__dirname, "expression_detection/haarcascade_frontalface_default.xml"),
-    INTERFACE_MEDIA_PROGRAM: join(__dirname, "../interface_media/media.py"),
+	SERVER_IP: ip,
+	ROBOT_IP: "localhost",
+	CHUNK: 8192,
+	BPS: 16,
+	CHANNELS: 1,
+	RATE: 44100,
+	INTERVAL: 1,
+	WIDTH: 320,
+	HEIGHT: 240,
+	EXPRESSION_DETECTION_PROGRAM: join(
+		__dirname,
+		"expression_detection/expression_detection.py"
+	),
+	FACE_DETECTOR_PATH: join(
+		__dirname,
+		"expression_detection/haarcascade_frontalface_default.xml"
+	),
+	INTERFACE_MEDIA_PROGRAM: join(__dirname, "../interface_media/media.py"),
 };
 
 // writes to setup.json
-writeFileSync(join(__dirname, "public/server_setup/setup.json"), JSON.stringify(SETUP, null, 4));
+writeFileSync(
+	join(__dirname, "public/server_setup/setup.json"),
+	JSON.stringify(SETUP, null, 4)
+);
 
 // updates setup.js
 writeFileSync(
-    join(__dirname, "public/frontend_setup/setup.js"),
-    Object.entries(SETUP).reduce(
-        (acc, [k, v]) => acc + `const ${k} = ${typeof v === "number" ? String(v) : `"${v}"`} \n`,
-        ""
-    )
+	join(__dirname, "public/frontend_setup/setup.js"),
+	Object.entries(SETUP).reduce(
+		(acc, [k, v]) =>
+			acc +
+			`const ${k} = ${typeof v === "number" ? String(v) : `"${v}"`} \n`,
+		""
+	)
 );
 
 // Middleware
@@ -59,77 +70,88 @@ const server = app.listen(port);
 
 // Handling de request do servidor soquete
 wsServer.on("connection", function (connection) {
-    const userId = v4();
-    clients[userId] = { connection, messages: [] };
-    console.log("Server: Connection established");
+	const userId = v4();
+	clients[userId] = { connection, messages: [] };
+	console.log("Server: Connection established");
 
-    connection.on("close", () => handleDisconnect(userId));
+	connection.on("close", () => handleDisconnect(userId));
 
-    connection.on("message", function (message) {
-        message = JSON.parse(message.toString());
-        switch (message.type) {
-            case "messages":
-                clients[userId].messages = message.messages;
-                break;
-            case "control":
-                console.log(message);
+	connection.on("message", function (message) {
+		message = JSON.parse(message.toString());
+		switch (message.type) {
+			case "messages":
+				clients[userId].messages = message.messages;
+				distributeData({
+					type: "control",
+					pan: state.pan,
+					tilt: state.tilt,
+					fex: state.fex,
+				});
+				distributeData({
+					type: "interface_state",
+					interfaceAudio: state.interfaceAudio,
+					interfaceVideo: state.interfaceVideo,
+				});
+				break;
+			case "control":
+				console.log(message);
 
-                state.pan = message.pan;
-                state.tilt = message.tilt;
-                state.fex = message.fex === "ND" ? "N" : message.fex;
+				state.pan = message.pan;
+				state.tilt = message.tilt;
+				state.fex = message.fex === "ND" ? "N" : message.fex;
 
-                distributeData({
-                    type: "control",
-                    pan: state.pan,
-                    tilt: state.tilt,
-                    fex: state.fex,
-                });
-                break;
-            case "fex":
-                console.log(message);
+				distributeData({
+					type: "control",
+					pan: state.pan,
+					tilt: state.tilt,
+					fex: state.fex,
+				});
+				break;
+			case "fex":
+				console.log(message);
 
-                state.fex = message.fex === "ND" ? "N" : message.fex;
+				state.fex = message.fex === "ND" ? "N" : message.fex;
 
-                distributeData({ type: "fex", fex: state.fex });
-                break;
-            case "interface_state":
-                console.log(message);
+				distributeData({ type: "fex", fex: state.fex });
+				break;
+			case "interface_state":
+				console.log(message);
 
-                state.interfaceAudio = message.interfaceAudio;
-                state.interfaceVideo = message.interfaceVideo;
+				state.interfaceAudio = message.interfaceAudio;
+				state.interfaceVideo = message.interfaceVideo;
 
-                distributeData({
-                    type: "interface_state",
-                    interfaceAudio: state.interfaceAudio,
-                    interfaceVideo: state.interfaceVideo,
-                });
-                break;
-            case "interface_audio":
-                if (state.interfaceAudio) {
-                    distributeData(message);
-                }
-                break;
-            case "interface_video":
-                if (state.interfaceVideo) {
-                    distributeData(message);
-                }
-                break;
-            case "robot_audio":
-            case "robot_video":
-                distributeData(message);
-                break;
-            default:
-                console.log(`Unsupported message type: ${message.type}`);
-                break;
-        }
-    });
+				distributeData({
+					type: "interface_state",
+					interfaceAudio: state.interfaceAudio,
+					interfaceVideo: state.interfaceVideo,
+				});
+				break;
+			case "interface_audio":
+				if (state.interfaceAudio) {
+					distributeData(message);
+				}
+				break;
+			case "interface_video":
+				if (state.interfaceVideo) {
+					distributeData(message);
+				}
+				break;
+			case "robot_audio":
+			case "robot_video":
+				distributeData(message);
+				break;
+			default:
+				console.log(`Unsupported message type: ${message.type}`);
+				break;
+		}
+	});
 });
 
 // Mudanca de protocolo de http para ws
 server.on("upgrade", (req, socket, head) => {
-    wsServer.handleUpgrade(req, socket, head, (ws) => {
-        wsServer.emit("connection", ws, req);
-    });
+	wsServer.handleUpgrade(req, socket, head, (ws) => {
+		wsServer.emit("connection", ws, req);
+	});
 });
 
 // clients = todos usuarios conectados ao servidor ws
@@ -137,73 +159,64 @@ const clients = {};
 
 // envia um arquivo json para todos os usuarios conectados ao servidor ws
 function distributeData(message) {
-    const data = JSON.stringify(message);
-    Object.values(clients).forEach((client) => {
-        if (client.connection.readyState === WebSocket.OPEN && client.messages.includes(message.type)) {
-            client.connection.send(data);
-        }
-    });
+	const data = JSON.stringify(message);
+	Object.values(clients).forEach((client) => {
+		if (
+			client.connection.readyState === WebSocket.OPEN &&
+			client.messages.includes(message.type)
+		) {
+			client.connection.send(data);
+		}
+	});
 }
 
 function handleDisconnect(userId) {
-    console.log(`${userId} disconnected.`);
-    delete clients[userId];
+	console.log(`${userId} disconnected.`);
+	delete clients[userId];
 }
 
 const state = {
-    pan: 0,
-    tilt: 0,
-    fex: "N",
-    interfaceAudio: false,
-    interfaceVideo: false,
+	pan: 0,
+	tilt: 0,
+	fex: "N",
+	interfaceAudio: false,
+	interfaceVideo: false,
 };
 
 // GET
 
 // Homepage
 app.get("/", function (req, res) {
-    res.render("pages/index");
+	res.render("pages/index");
 });
 
 // Pagina para controlar sistema embarcado
 app.get("/control", function (req, res) {
-    res.render("pages/control");
+	res.render("pages/control");
 });
 
 // Pagina para mostrar as expressões faciais
 app.get("/expression", function (req, res) {
-    res.render("pages/expression");
+	res.render("pages/expression");
 });
 
-const expressionDetection = spawn("python3", [SETUP.EXPRESSION_DETECTION_PROGRAM]);
+const expressionDetection = spawn("python3", [
+	SETUP.EXPRESSION_DETECTION_PROGRAM,
+]);
 
 expressionDetection.stderr.on("data", (data) => {
-    console.log(`[EXPRESSION_DETECTION]: ${data}`);
+	console.log(`[EXPRESSION_DETECTION]: ${data}`);
 });
 
 const interfaceMedia = spawn("python3", [SETUP.INTERFACE_MEDIA_PROGRAM]);
 
 interfaceMedia.stderr.on("data", (data) => {
-    console.log(`[INTERFACE_MEDIA]: ${data}`);
+	console.log(`[INTERFACE_MEDIA]: ${data}`);
 });
 
 process.on("SIGINT", () => {
-    console.log("Server is killing subprocesses before terminating");
-    expressionDetection.kill();
-    interfaceMedia.kill();
-    process.exit();
+	console.log("Server is killing subprocesses before terminating");
+	expressionDetection.kill();
+	interfaceMedia.kill();
+	process.exit();
 });
-
-setInterval(() => {
-    distributeData({
-        type: "control",
-        pan: state.pan,
-        tilt: state.tilt,
-        fex: state.fex,
-    });
-    distributeData({
-        type: "interface_state",
-        interfaceAudio: state.interfaceAudio,
-        interfaceVideo: state.interfaceVideo,
-    });
-}, 5000);
