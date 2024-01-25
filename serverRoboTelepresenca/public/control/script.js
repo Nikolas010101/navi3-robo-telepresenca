@@ -10,6 +10,15 @@ const state = {
     videoPlayer = document.querySelector("#video-player"),
     websocket = new WebSocket(`ws://${SERVER_IP}:3000`);
 
+websocket.addEventListener("open", (event) => {
+    websocket.send(
+        JSON.stringify({
+            type: "messages",
+            messages: ["fex", "control", "interface_state", "robot_video", "robot_audio"],
+        })
+    );
+});
+
 let audioContext = null,
     gainNode = null;
 
@@ -63,9 +72,7 @@ websocket.addEventListener("message", (event) => {
 
 function base64ToBlob(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, "+")
-        .replace(/_/g, "/");
+    const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
     const binaryString = window.atob(base64);
     const byteArrays = [];
     for (let i = 0; i < binaryString.length; i++) {
@@ -121,14 +128,8 @@ function genAudioHeader(sampleRate, bitsPerSample, channels) {
     o = concatArrays(o, int16ToLittleEndianArray(1)); // Format type (1 - PCM)
     o = concatArrays(o, int16ToLittleEndianArray(channels));
     o = concatArrays(o, int32ToLittleEndianArray(sampleRate));
-    o = concatArrays(
-        o,
-        int32ToLittleEndianArray((sampleRate * channels * bitsPerSample) / 8)
-    );
-    o = concatArrays(
-        o,
-        int16ToLittleEndianArray((channels * bitsPerSample) / 8)
-    );
+    o = concatArrays(o, int32ToLittleEndianArray((sampleRate * channels * bitsPerSample) / 8));
+    o = concatArrays(o, int16ToLittleEndianArray((channels * bitsPerSample) / 8));
     o = concatArrays(o, int16ToLittleEndianArray(bitsPerSample));
 
     // Data Chunk
@@ -196,9 +197,7 @@ function updateButtons(message) {
     if (message.type === "control") {
         sliders.forEach((slider) => {
             slider.value = message[slider.id];
-            document.getElementById(
-                `${slider.id}-label`
-            ).innerHTML = `${slider.value}°`;
+            document.getElementById(`${slider.id}-label`).innerHTML = `${slider.value}°`;
         });
     } else if (message.type === "interface_state") {
         video.checked = state.video;

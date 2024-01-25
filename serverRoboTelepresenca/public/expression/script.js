@@ -10,12 +10,21 @@ const state = {
     },
     header = genAudioHeader(Number(RATE), Number(BPS), Number(CHANNELS)),
     videoPlayer = document.querySelector("#video-player"),
-    ws = new WebSocket(`ws://${SERVER_IP}:3000`);
+    websocket = new WebSocket(`ws://${SERVER_IP}:3000`);
+
+websocket.addEventListener("open", (event) => {
+    websocket.send(
+        JSON.stringify({
+            type: "messages",
+            messages: ["control", "fex", "interface_audio"],
+        })
+    );
+});
 
 let audioContext = null,
     gainNode = null;
 
-ws.addEventListener("message", (event) => {
+websocket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
     switch (message.type) {
         case "control":
@@ -97,14 +106,8 @@ function genAudioHeader(sampleRate, bitsPerSample, channels) {
     o = concatArrays(o, int16ToLittleEndianArray(1)); // Format type (1 - PCM)
     o = concatArrays(o, int16ToLittleEndianArray(channels));
     o = concatArrays(o, int32ToLittleEndianArray(sampleRate));
-    o = concatArrays(
-        o,
-        int32ToLittleEndianArray((sampleRate * channels * bitsPerSample) / 8)
-    );
-    o = concatArrays(
-        o,
-        int16ToLittleEndianArray((channels * bitsPerSample) / 8)
-    );
+    o = concatArrays(o, int32ToLittleEndianArray((sampleRate * channels * bitsPerSample) / 8));
+    o = concatArrays(o, int16ToLittleEndianArray((channels * bitsPerSample) / 8));
     o = concatArrays(o, int16ToLittleEndianArray(bitsPerSample));
 
     // Data Chunk

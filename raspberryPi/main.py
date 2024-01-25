@@ -5,7 +5,9 @@ from websockets.exceptions import InvalidURI, InvalidHandshake, ConnectionClosed
 from os.path import join, abspath
 
 with open(
-    abspath(join(__file__, "../../serverRoboTelepresenca/public/server_setup/setup.json")),
+    abspath(
+        join(__file__, "../../serverRoboTelepresenca/public/server_setup/setup.json")
+    ),
     "r",
 ) as file:
     SETUP: dict = json.load(file)
@@ -103,12 +105,14 @@ def listen() -> None:
     while True:
         try:
             with connect(f"ws://{SERVER_IP}:3000") as websocket:
+                websocket.send(
+                    json.dumps({"type": "messages", "messages": ["control"]})
+                )
                 while True:
                     data = json.loads(websocket.recv())
-                    if data["type"] == "control":
-                        pan, tilt = data["pan"], data["tilt"]
-                        print(f"Pan: {pan}, Tilt: {tilt}")
-                        move_servos(pan, tilt)
+                    pan, tilt = data["pan"], data["tilt"]
+                    print(f"Pan: {pan}, Tilt: {tilt}")
+                    move_servos(pan, tilt)
         except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
             print(f"Could not connect to server, error: {e}")
             time.sleep(2)

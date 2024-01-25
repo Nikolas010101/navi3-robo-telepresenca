@@ -63,11 +63,14 @@ prev = time.time()
 while True:
     try:
         with connect(f"ws://{SERVER_IP}:3000") as websocket:
+            websocket.send(
+                json.dumps({"type": "messages", "messages": ["interface_video"]})
+            )
             with mp_face_mesh.FaceMesh() as face_mesh:
                 while True:
                     message = json.loads(websocket.recv())
                     curr = time.time()
-                    if message["type"] == "interface_video" and curr - prev >= INTERVAL:
+                    if curr - prev >= INTERVAL:
                         encoded_data = message["media"]
                         image = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
                         colored = cv2.imdecode(image, cv2.IMREAD_COLOR)

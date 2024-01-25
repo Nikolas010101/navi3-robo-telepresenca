@@ -31,30 +31,19 @@ const SETUP = {
     INTERVAL: 1,
     WIDTH: 320,
     HEIGHT: 240,
-    EXPRESSION_DETECTION_PROGRAM: join(
-        __dirname,
-        "expression_detection/expression_detection.py"
-    ),
-    FACE_DETECTOR_PATH: join(
-        __dirname,
-        "expression_detection/haarcascade_frontalface_default.xml"
-    ),
+    EXPRESSION_DETECTION_PROGRAM: join(__dirname, "expression_detection/expression_detection.py"),
+    FACE_DETECTOR_PATH: join(__dirname, "expression_detection/haarcascade_frontalface_default.xml"),
     INTERFACE_MEDIA_PROGRAM: join(__dirname, "../interface_media/media.py"),
 };
 
 // writes to setup.json
-writeFileSync(
-    join(__dirname, "public/server_setup/setup.json"),
-    JSON.stringify(SETUP, null, 4)
-);
+writeFileSync(join(__dirname, "public/server_setup/setup.json"), JSON.stringify(SETUP, null, 4));
 
 // updates setup.js
 writeFileSync(
     join(__dirname, "public/frontend_setup/setup.js"),
     Object.entries(SETUP).reduce(
-        (acc, [k, v]) =>
-            acc +
-            `const ${k} = ${typeof v === "number" ? String(v) : `"${v}"`} \n`,
+        (acc, [k, v]) => acc + `const ${k} = ${typeof v === "number" ? String(v) : `"${v}"`} \n`,
         ""
     )
 );
@@ -71,7 +60,7 @@ const server = app.listen(port);
 // Handling de request do servidor soquete
 wsServer.on("connection", function (connection) {
     const userId = v4();
-    clients[userId] = connection;
+    clients[userId] = { connection, messages: [] };
     console.log("Server: Connection established");
 
     connection.on("close", () => handleDisconnect(userId));
@@ -79,6 +68,9 @@ wsServer.on("connection", function (connection) {
     connection.on("message", function (message) {
         message = JSON.parse(message.toString());
         switch (message.type) {
+            case "messages":
+                clients[userId].messages = message.messages;
+                break;
             case "control":
                 console.log(message);
 
@@ -131,17 +123,6 @@ wsServer.on("connection", function (connection) {
                 break;
         }
     });
-    distributeData({
-        type: "control",
-        pan: state.pan,
-        tilt: state.tilt,
-        fex: state.fex,
-    });
-    distributeData({
-        type: "interface_state",
-        interfaceAudio: state.interfaceAudio,
-        interfaceVideo: state.interfaceVideo,
-    });
 });
 
 // Mudanca de protocolo de http para ws
@@ -155,11 +136,11 @@ server.on("upgrade", (req, socket, head) => {
 const clients = {};
 
 // envia um arquivo json para todos os usuarios conectados ao servidor ws
-function distributeData(json) {
-    const data = JSON.stringify(json);
+function distributeData(message) {
+    const data = JSON.stringify(message);
     Object.values(clients).forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(data);
+        if (client.connection.readyState === WebSocket.OPEN && client.messages.includes(message.type)) {
+            client.connection.send(data);
         }
     });
 }
@@ -194,11 +175,17 @@ app.get("/expression", function (req, res) {
     res.render("pages/expression");
 });
 
-const expressionDetection = spawn("python3", [
-    SETUP.EXPRESSION_DETECTION_PROGRAM,
-]);
+const expressionDetection = spawn("python3", [SETUP.EXPRESSION_DETECTION_PROGRAM]);
+
+expressionDetection.stderr.on("data", (data) => {
+    console.log(`[EXPRESSION_DETECTION]: ${data}`);
+});
 
 const interfaceMedia = spawn("python3", [SETUP.INTERFACE_MEDIA_PROGRAM]);
+
+interfaceMedia.stderr.on("data", (data) => {
+    console.log(`[INTERFACE_MEDIA]: ${data}`);
+});
 
 process.on("SIGINT", () => {
     console.log("Server is killing subprocesses before terminating");
@@ -206,3 +193,17 @@ process.on("SIGINT", () => {
     interfaceMedia.kill();
     process.exit();
 });
+
+setInterval(() => {
+    distributeData({
+        type: "control",
+        pan: state.pan,
+        tilt: state.tilt,
+        fex: state.fex,
+    });
+    distributeData({
+        type: "interface_state",
+        interfaceAudio: state.interfaceAudio,
+        interfaceVideo: state.interfaceVideo,
+    });
+}, 5000);
