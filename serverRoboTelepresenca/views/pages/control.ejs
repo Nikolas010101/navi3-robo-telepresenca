@@ -13,6 +13,7 @@
             <div class="jumbotron">
                 <h1>Controle de dispostivo embarcado</h1>
                 <div class="video-container">
+                    <video id="local-video" autoplay muted></video>
                     <video id="video-player" autoplay alt="Vídeo"></video>
                 </div>
                 <div class="call-buttons">
@@ -25,7 +26,7 @@
                     </div>
 
                     <div class="call-button">
-                        <input type="checkbox" id="mic" name="call" value="mic" />
+                        <input type="checkbox" id="mic" name="call" value="mic" checked />
                         <label for="mic">
                             <img class="call-img" src="/img/mic_on.svg" alt="end" />
                             <p>Microfone</p>
@@ -33,7 +34,7 @@
                     </div>
 
                     <div class="call-button">
-                        <input type="checkbox" id="video" name="call" value="video" />
+                        <input type="checkbox" id="video" name="call" value="video" checked />
                         <label for="video">
                             <img class="call-img" src="/img/video_on.svg" alt="end" />
                             <p>Câmera</p>
@@ -41,7 +42,7 @@
                     </div>
 
                     <div class="call-button">
-                        <input type="checkbox" id="volume" name="call" value="volume" />
+                        <input type="checkbox" id="volume" name="call" value="volume" checked />
                         <label for="volume">
                             <img class="call-img" src="/img/volume_on.svg" alt="end" />
                             <p>Áudio</p>

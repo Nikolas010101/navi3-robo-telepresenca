@@ -1,8 +1,8 @@
 const state = {
         id: "",
-        mic: false,
-        video: false,
-        volume: false,
+        mic: true,
+        video: true,
+        volume: true,
         pan: 0,
         tilt: 0,
         fex: "N",
@@ -11,6 +11,7 @@ const state = {
         iceServers: [{ urls: "stun:stun.stunprotocol.org:3478" }, { urls: "stun:stun.l.google.com:19302" }],
     },
     videoPlayer = document.querySelector("#video-player"),
+    localVideo = document.querySelector("#local-video"),
     websocket = new WebSocket(`ws://${SERVER_IP}:3000`);
 
 let localStream, peerConnection;
@@ -19,12 +20,13 @@ websocket.addEventListener("open", async (event) => {
     websocket.send(
         JSON.stringify({
             type: "messages",
-            messages: ["fex", "pose", "id", "rtc", "interface_state"],
+            messages: ["id", "fex", "pose", "rtc"],
         })
     );
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
 
     localStream = stream;
+    localVideo.srcObject = stream;
     startConnection(true);
 });
 
@@ -41,11 +43,6 @@ websocket.addEventListener("message", (event) => {
         case "pose":
             state.pan = message.pan;
             state.tilt = message.tilt;
-            updateButtons(message);
-            break;
-        case "interface_state":
-            state.video = message.interfaceVideo;
-            state.mic = message.interfaceAudio;
             updateButtons(message);
             break;
         case "rtc":
@@ -103,18 +100,18 @@ const mic = document.querySelector("#mic");
 mic.addEventListener("change", (event) => {
     state.mic = event.target.checked;
     localStream.getAudioTracks()[0].enabled = state.mic;
-    sendInterfaceState();
 });
 
 const video = document.querySelector("#video");
 video.addEventListener("change", (event) => {
     state.video = event.target.checked;
-    sendInterfaceState();
+    localStream.getVideoTracks()[0].enabled = state.video;
 });
 
 const volume = document.querySelector("#volume");
 volume.addEventListener("change", (event) => {
     state.volume = event.target.checked;
+    videoPlayer.muted = !state.volume;
 });
 
 // Expression buttons
@@ -146,15 +143,10 @@ sliders.forEach((slider) => {
 
 // Update buttons with server state
 function updateButtons(message) {
-    if (message.type === "pose") {
-        sliders.forEach((slider) => {
-            slider.value = message[slider.id];
-            document.getElementById(`${slider.id}-label`).innerHTML = `${slider.value}°`;
-        });
-    } else if (message.type === "interface_state") {
-        video.checked = state.video;
-        mic.checked = state.mic;
-    }
+    sliders.forEach((slider) => {
+        slider.value = message[slider.id];
+        document.getElementById(`${slider.id}-label`).innerHTML = `${slider.value}°`;
+    });
 }
 
 async function sendPose() {
@@ -176,16 +168,6 @@ async function sendFex() {
     );
 }
 
-async function sendInterfaceState() {
-    websocket.send(
-        JSON.stringify({
-            type: "interface_state",
-            interfaceAudio: state.mic,
-            interfaceVideo: state.video,
-        })
-    );
-}
-
 async function sendFrame() {
     function arrayBufferToBase64(buffer) {
         let binary = "";
@@ -201,7 +183,7 @@ async function sendFrame() {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     let ctx = canvas.getContext("2d");
-    ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(localVideo, 0, 0, canvas.width, canvas.height);
 
     canvas.toBlob(function (blob) {
         const reader = new FileReader();
@@ -219,7 +201,7 @@ async function sendFrame() {
 }
 
 setInterval(() => {
-    if (videoPlayer.srcObject) {
+    if (localVideo.srcObject) {
         sendFrame();
     }
 }, 250);

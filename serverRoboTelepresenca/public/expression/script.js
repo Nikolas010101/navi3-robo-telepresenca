@@ -19,7 +19,7 @@ websocket.addEventListener("open", async (event) => {
     websocket.send(
         JSON.stringify({
             type: "messages",
-            messages: ["fex", "interface_audio", "rtc"],
+            messages: ["fex", "rtc"],
         })
     );
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -27,9 +27,6 @@ websocket.addEventListener("open", async (event) => {
     localStream = stream;
     startConnection(true);
 });
-
-let audioContext = null,
-    gainNode = null;
 
 websocket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
@@ -64,7 +61,9 @@ function startConnection(isCaller) {
             websocket.send(JSON.stringify({ type: "rtc", data: { ice: event.candidate, id: state.id } }));
         }
     };
-    
+    peerConnection.ontrack = (event) => {
+        audioPlayer.srcObject = event.streams[0];
+    };
     for (const track of localStream.getTracks()) {
         peerConnection.addTrack(track, localStream);
     }
@@ -87,5 +86,7 @@ function createdDescription(description) {
 
 const audio = document.querySelector("#audio-toggle");
 audio.addEventListener("click", (event) => {
+    state.volume = !state.volume;
+    audioPlayer.muted = !state.volume;
     audio.src = state.volume ? "/img/volume_off.svg" : "/img/volume_on.svg";
 });
