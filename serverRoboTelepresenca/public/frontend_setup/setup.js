@@ -1,6 +1,6 @@
 const SERVER_IP = "192.168.15.189" 
 const ROBOT_IP = "localhost" 
-const INTERVAL = 1 
+const INTERVAL = 0.5 
 const WIDTH = 320 
 const HEIGHT = 240 
 const EXPRESSION_DETECTION_PROGRAM = "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/expression_detection/expression_detection.py" 

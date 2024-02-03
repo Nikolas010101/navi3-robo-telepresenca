@@ -39,6 +39,7 @@ websocket.addEventListener("message", (event) => {
             updateFacialExpression(message);
             break;
         case "pose":
+            console.log("opa")
             state.pan = message.pan;
             state.tilt = message.tilt;
             updateButtons(message);
@@ -59,6 +60,7 @@ websocket.addEventListener("message", (event) => {
             } else if (signal.ice) {
                 peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice));
             }
+            sendFrame();
             break;
     }
 });
@@ -183,3 +185,42 @@ async function sendInterfaceState() {
         })
     );
 }
+
+async function sendFrame() {
+    function arrayBufferToBase64(buffer) {
+        let binary = "";
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    let canvas = document.createElement("canvas");
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+    let ctx = canvas.getContext("2d");
+    ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(function (blob) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const bytes = event.target.result;
+            websocket.send(
+                JSON.stringify({
+                    type: "interface_video",
+                    media: arrayBufferToBase64(bytes),
+                })
+            );
+        };
+        reader.readAsArrayBuffer(blob);
+    });
+}
+
+setInterval(() => {
+    if (videoPlayer.srcObject) {
+        sendFrame();
+        console.log("sent");
+    }
+}, 250);

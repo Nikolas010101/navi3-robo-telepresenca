@@ -124,14 +124,14 @@ while True:
                                 angles, mtxR, mtxQ, Qx, Qy, Qz = cv2.RQDecomp3x3(
                                     rotation_matrix
                                 )
-                                tilt = angles[0] - np.sign(angles[0]) * 180
+                                tilt = int(angles[0] + (180 if angles[0] < 0 else -180))
                                 pan = angles[1]
                                 websocket.send(
                                     json.dumps(
                                         {"type": "pose", "pan": int(pan), "tilt": 0}
                                     )
                                 )
-                                prev = time.time()
+                        prev = time.time()
     except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
         print(f"Could not connect to server, error: {e}")
         time.sleep(2)

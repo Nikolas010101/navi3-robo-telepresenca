@@ -24,7 +24,7 @@ const port = 3000;
 const SETUP = {
     SERVER_IP: ip,
     ROBOT_IP: "localhost",
-    INTERVAL: 1,
+    INTERVAL: 0.5,
     WIDTH: 320,
     HEIGHT: 240,
     EXPRESSION_DETECTION_PROGRAM: join(__dirname, "expression_detection/expression_detection.py"),
@@ -108,11 +108,6 @@ wsServer.on("connection", function (connection) {
                     userID
                 );
                 break;
-            case "interface_audio":
-                if (state.interfaceAudio) {
-                    distributeData(message, userID);
-                }
-                break;
             case "interface_video":
                 if (state.interfaceVideo) {
                     distributeData(message, userID);
@@ -161,8 +156,7 @@ const state = {
     pan: 0,
     tilt: 0,
     fex: "N",
-    interfaceAudio: false,
-    interfaceVideo: false,
+    interfaceVideo: true,
 };
 
 // GET
