@@ -39,7 +39,6 @@ websocket.addEventListener("message", (event) => {
             updateFacialExpression(message);
             break;
         case "pose":
-            console.log("opa")
             state.pan = message.pan;
             state.tilt = message.tilt;
             updateButtons(message);
@@ -103,6 +102,7 @@ end.addEventListener("change", () => (location.href = "/"));
 const mic = document.querySelector("#mic");
 mic.addEventListener("change", (event) => {
     state.mic = event.target.checked;
+    localStream.getAudioTracks()[0].enabled = state.mic;
     sendInterfaceState();
 });
 
@@ -114,7 +114,7 @@ video.addEventListener("change", (event) => {
 
 const volume = document.querySelector("#volume");
 volume.addEventListener("change", (event) => {
-    console.log(`Audio: ${state.volume}`);
+    state.volume = event.target.checked;
 });
 
 // Expression buttons
@@ -221,6 +221,5 @@ async function sendFrame() {
 setInterval(() => {
     if (videoPlayer.srcObject) {
         sendFrame();
-        console.log("sent");
     }
 }, 250);
