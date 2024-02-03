@@ -69,14 +69,6 @@ wsServer.on("connection", function (connection) {
                 distributeData({ type: "id", id: userID });
                 distributeData({ type: "pose", pan: state.pan, tilt: state.tilt }, 0);
                 distributeData({ type: "fex", fex: state.fex }, 0);
-                distributeData(
-                    {
-                        type: "interface_state",
-                        interfaceAudio: state.interfaceAudio,
-                        interfaceVideo: state.interfaceVideo,
-                    },
-                    0
-                );
                 break;
             case "pose":
                 console.log(message);
@@ -93,25 +85,8 @@ wsServer.on("connection", function (connection) {
 
                 distributeData({ type: "fex", fex: state.fex }, userID);
                 break;
-            case "interface_state":
-                console.log(message);
-
-                state.interfaceAudio = message.interfaceAudio;
-                state.interfaceVideo = message.interfaceVideo;
-
-                distributeData(
-                    {
-                        type: "interface_state",
-                        interfaceAudio: state.interfaceAudio,
-                        interfaceVideo: state.interfaceVideo,
-                    },
-                    userID
-                );
-                break;
             case "interface_video":
-                if (state.interfaceVideo) {
-                    distributeData(message, userID);
-                }
+                distributeData(message, userID);
                 break;
             case "rtc":
                 distributeData(message, userID);
@@ -156,7 +131,6 @@ const state = {
     pan: 0,
     tilt: 0,
     fex: "N",
-    interfaceVideo: true,
 };
 
 // GET
