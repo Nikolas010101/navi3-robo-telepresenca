@@ -8,7 +8,7 @@ const state = {
         volume: false,
         prevExpression: "N",
     },
-    header = genAudioHeader(Number(RATE), Number(BPS), Number(CHANNELS)),
+    header = genAudioHeader(RATE, BPS, CHANNELS),
     videoPlayer = document.querySelector("#video-player"),
     websocket = new WebSocket(`ws://${SERVER_IP}:3000`);
 
@@ -16,7 +16,7 @@ websocket.addEventListener("open", (event) => {
     websocket.send(
         JSON.stringify({
             type: "messages",
-            messages: ["control", "fex", "interface_audio"],
+            messages: ["fex", "interface_audio"],
         })
     );
 });
@@ -27,7 +27,6 @@ let audioContext = null,
 websocket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
     switch (message.type) {
-        case "control":
         case "fex":
             if (message.fex != state.prevExpression) {
                 videoPlayer.src = `/videos/cut/${state.prevExpression}${message.fex}.mp4`;

@@ -80,19 +80,23 @@ while True:
                         faces = face_detector.detectMultiScale(
                             gray_scale, scaleFactor=1.1, minNeighbors=4
                         )
-                        if not len(faces):
-                            continue
-
-                        x, y, w, h = faces[0]
-                        cropped = colored[y : y + h, x : x + w]
-                        detected_fex = rmn.detect_emotion_for_single_face_image(cropped)
-
+                        if len(faces):
+                            x, y, w, h = faces[0]
+                            cropped = colored[y : y + h, x : x + w]
+                            detected_fex = rmn.detect_emotion_for_single_face_image(
+                                cropped
+                            )
+                            websocket.send(
+                                json.dumps(
+                                    {"type": "fex", "fex": FEX_MAP[detected_fex[0]]}
+                                )
+                            )
                         # determine head pose
                         op = face_mesh.process(cv2.cvtColor(colored, cv2.COLOR_BGR2RGB))
                         face_2d = []
                         if op.multi_face_landmarks:
                             for landmarks in op.multi_face_landmarks:
-                                for id, landmark in enumerate(landmarks.landmark):
+                                for landmark in landmarks.landmark:
                                     x, y = int(landmark.x * WIDTH), int(
                                         landmark.y * HEIGHT
                                     )
@@ -124,12 +128,7 @@ while True:
                                 pan = angles[1]
                                 websocket.send(
                                     json.dumps(
-                                        {
-                                            "type": "control",
-                                            "pan": int(pan),
-                                            "tilt": 0,
-                                            "fex": FEX_MAP[detected_fex[0]],
-                                        }
+                                        {"type": "pose", "pan": int(pan), "tilt": 0}
                                     )
                                 )
                                 prev = time.time()

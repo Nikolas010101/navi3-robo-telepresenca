@@ -14,7 +14,7 @@ websocket.addEventListener("open", (event) => {
     websocket.send(
         JSON.stringify({
             type: "messages",
-            messages: ["fex", "control", "interface_state", "robot_video", "robot_audio"],
+            messages: ["fex", "pose", "interface_state", "robot_video", "robot_audio"],
         })
     );
 });
@@ -29,11 +29,9 @@ websocket.addEventListener("message", (event) => {
             state.fex = message.fex;
             updateFacialExpression(message);
             break;
-        case "control":
+        case "pose":
             state.pan = message.pan;
             state.tilt = message.tilt;
-            state.fex = message.fex;
-            updateFacialExpression(message);
             updateButtons(message);
             break;
         case "interface_state":
@@ -170,7 +168,7 @@ const expressionButtons = document.querySelectorAll('input[name="expression"]');
 expressionButtons.forEach((button) => {
     button.addEventListener("change", () => {
         state.fex = button.value;
-        sendControl();
+        sendFex();
     });
 });
 
@@ -188,13 +186,13 @@ sliders.forEach((slider) => {
         const label = document.getElementById(`${slider.id}-label`);
         label.innerHTML = `${slider.value}°`;
         state[slider.id] = Number(slider.value);
-        sendControl();
+        sendPose();
     });
 });
 
 // Update buttons with server state
 function updateButtons(message) {
-    if (message.type === "control") {
+    if (message.type === "pose") {
         sliders.forEach((slider) => {
             slider.value = message[slider.id];
             document.getElementById(`${slider.id}-label`).innerHTML = `${slider.value}°`;
@@ -205,12 +203,20 @@ function updateButtons(message) {
     }
 }
 
-async function sendControl() {
+async function sendPose() {
     websocket.send(
         JSON.stringify({
-            type: "control",
+            type: "pose",
             pan: state.pan,
             tilt: state.tilt,
+        })
+    );
+}
+
+async function sendFex() {
+    websocket.send(
+        JSON.stringify({
+            type: "fex",
             fex: state.fex,
         })
     );

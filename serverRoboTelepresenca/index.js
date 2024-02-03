@@ -72,9 +72,15 @@ wsServer.on("connection", function (connection) {
                 clients[userID].messages = message.messages;
                 distributeData(
                     {
-                        type: "control",
+                        type: "pose",
                         pan: state.pan,
                         tilt: state.tilt,
+                    },
+                    0
+                );
+                distributeData(
+                    {
+                        type: "fex",
                         fex: state.fex,
                     },
                     0
@@ -88,19 +94,17 @@ wsServer.on("connection", function (connection) {
                     0
                 );
                 break;
-            case "control":
+            case "pose":
                 console.log(message);
 
                 state.pan = message.pan;
                 state.tilt = message.tilt;
-                state.fex = message.fex === "ND" ? "N" : message.fex;
 
                 distributeData(
                     {
-                        type: "control",
+                        type: "pose",
                         pan: state.pan,
                         tilt: state.tilt,
-                        fex: state.fex,
                     },
                     userID
                 );

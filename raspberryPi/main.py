@@ -106,7 +106,7 @@ def listen() -> None:
         try:
             with connect(f"ws://{SERVER_IP}:3000") as websocket:
                 websocket.send(
-                    json.dumps({"type": "messages", "messages": ["control"]})
+                    json.dumps({"type": "messages", "messages": ["pose"]})
                 )
                 while True:
                     data = json.loads(websocket.recv())
