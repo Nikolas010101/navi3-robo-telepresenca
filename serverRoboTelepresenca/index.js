@@ -24,10 +24,6 @@ const port = 3000;
 const SETUP = {
     SERVER_IP: ip,
     ROBOT_IP: "localhost",
-    CHUNK: 8192,
-    BPS: 16,
-    CHANNELS: 1,
-    RATE: 44100,
     INTERVAL: 1,
     WIDTH: 320,
     HEIGHT: 240,
@@ -70,21 +66,9 @@ wsServer.on("connection", function (connection) {
         switch (message.type) {
             case "messages":
                 clients[userID].messages = message.messages;
-                distributeData(
-                    {
-                        type: "pose",
-                        pan: state.pan,
-                        tilt: state.tilt,
-                    },
-                    0
-                );
-                distributeData(
-                    {
-                        type: "fex",
-                        fex: state.fex,
-                    },
-                    0
-                );
+                distributeData({ type: "id", id: userID });
+                distributeData({ type: "pose", pan: state.pan, tilt: state.tilt }, 0);
+                distributeData({ type: "fex", fex: state.fex }, 0);
                 distributeData(
                     {
                         type: "interface_state",
@@ -100,14 +84,7 @@ wsServer.on("connection", function (connection) {
                 state.pan = message.pan;
                 state.tilt = message.tilt;
 
-                distributeData(
-                    {
-                        type: "pose",
-                        pan: state.pan,
-                        tilt: state.tilt,
-                    },
-                    userID
-                );
+                distributeData({ type: "pose", pan: state.pan, tilt: state.tilt }, userID);
                 break;
             case "fex":
                 console.log(message);
@@ -141,8 +118,6 @@ wsServer.on("connection", function (connection) {
                     distributeData(message, userID);
                 }
                 break;
-            case "robot_audio":
-            case "robot_video":
             case "rtc":
                 distributeData(message, userID);
                 break;
@@ -213,15 +188,8 @@ expressionDetection.stderr.on("data", (data) => {
     console.log(`[EXPRESSION_DETECTION]: ${data}`);
 });
 
-const interfaceMedia = spawn("python3", [SETUP.INTERFACE_MEDIA_PROGRAM]);
-
-interfaceMedia.stderr.on("data", (data) => {
-    console.log(`[INTERFACE_MEDIA]: ${data}`);
-});
-
 process.on("SIGINT", () => {
     console.log("Server is killing subprocesses before terminating");
     expressionDetection.kill();
-    interfaceMedia.kill();
     process.exit();
 });

@@ -1,4 +1,5 @@
 const state = {
+        id: "",
         mic: false,
         video: false,
         volume: false,
@@ -6,25 +7,33 @@ const state = {
         tilt: 0,
         fex: "N",
     },
-    header = genAudioHeader(Number(RATE), Number(BPS), Number(CHANNELS)),
+    peerConnectionConfig = {
+        iceServers: [{ urls: "stun:stun.stunprotocol.org:3478" }, { urls: "stun:stun.l.google.com:19302" }],
+    },
     videoPlayer = document.querySelector("#video-player"),
     websocket = new WebSocket(`ws://${SERVER_IP}:3000`);
 
-websocket.addEventListener("open", (event) => {
+let localStream, peerConnection;
+
+websocket.addEventListener("open", async (event) => {
     websocket.send(
         JSON.stringify({
             type: "messages",
-            messages: ["fex", "pose", "interface_state", "robot_video", "robot_audio"],
+            messages: ["fex", "pose", "id", "rtc", "interface_state"],
         })
     );
-});
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
 
-let audioContext = null,
-    gainNode = null;
+    localStream = stream;
+    startConnection(true);
+});
 
 websocket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
     switch (message.type) {
+        case "id":
+            state.id = message.id;
+            break;
         case "fex":
             state.fex = message.fex;
             updateFacialExpression(message);
@@ -39,102 +48,50 @@ websocket.addEventListener("message", (event) => {
             state.mic = message.interfaceAudio;
             updateButtons(message);
             break;
-        case "robot_video":
-            const videoBlob = base64ToBlob(message.media);
-            const frameURL = URL.createObjectURL(videoBlob);
-            videoPlayer.src = frameURL;
-            break;
-        case "robot_audio":
-            if (audioContext !== null) {
-                const binaryData = atob(message.media);
-                const arrayBuffer = new ArrayBuffer(binaryData.length);
-                const view = new Uint8Array(arrayBuffer);
-                for (let i = 0; i < binaryData.length; i++) {
-                    view[i] = binaryData.charCodeAt(i);
-                }
-                const totalBuffer = new Uint8Array(header.length + view.length);
-                totalBuffer.set(header);
-                totalBuffer.set(view, header.length);
-                audioContext.decodeAudioData(totalBuffer.buffer, (buffer) => {
-                    const source = audioContext.createBufferSource();
-                    source.buffer = buffer;
-
-                    source.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    source.start();
+        case "rtc":
+            if (!peerConnection) startConnection(false);
+            const signal = message.data;
+            if (signal.sdp) {
+                peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => {
+                    if (signal.sdp.type !== "offer") return;
+                    peerConnection.createAnswer().then(createdDescription);
                 });
+            } else if (signal.ice) {
+                peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice));
             }
             break;
     }
 });
 
-function base64ToBlob(base64String) {
-    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, "+").replace(/_/g, "/");
-    const binaryString = window.atob(base64);
-    const byteArrays = [];
-    for (let i = 0; i < binaryString.length; i++) {
-        byteArrays.push(binaryString.charCodeAt(i));
+function startConnection(isCaller) {
+    peerConnection = new RTCPeerConnection(peerConnectionConfig);
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate != null) {
+            websocket.send(JSON.stringify({ type: "rtc", data: { ice: event.candidate, id: state.id } }));
+        }
+    };
+    peerConnection.ontrack = (event) => {
+        videoPlayer.srcObject = event.streams[0];
+    };
+
+    for (const track of localStream.getTracks()) {
+        peerConnection.addTrack(track, localStream);
     }
-    const byteArray = new Uint8Array(byteArrays);
-    return new Blob([byteArray]);
+
+    if (isCaller) {
+        peerConnection.createOffer().then(createdDescription);
+    }
 }
 
-function genAudioHeader(sampleRate, bitsPerSample, channels) {
-    function concatArrays(arr1, arr2) {
-        const result = new Uint8Array(arr1.length + arr2.length);
-        result.set(arr1);
-        result.set(arr2, arr1.length);
-        return result;
-    }
-
-    function stringToUint8Array(str) {
-        const result = new Uint8Array(str.length);
-        for (let i = 0; i < str.length; i++) {
-            result[i] = str.charCodeAt(i);
-        }
-        return result;
-    }
-
-    function int16ToLittleEndianArray(value) {
-        const result = new Uint8Array(2);
-        result[0] = value & 0xff;
-        result[1] = (value >> 8) & 0xff;
-        return result;
-    }
-
-    function int32ToLittleEndianArray(value) {
-        const result = new Uint8Array(4);
-        result[0] = value & 0xff;
-        result[1] = (value >> 8) & 0xff;
-        result[2] = (value >> 16) & 0xff;
-        result[3] = (value >> 24) & 0xff;
-        return result;
-    }
-
-    const datasize = 2 * Math.pow(10, 9);
-    let o = new Uint8Array(0);
-
-    // RIFF Header
-    o = concatArrays(o, stringToUint8Array("RIFF"));
-    o = concatArrays(o, int32ToLittleEndianArray(datasize + 36));
-    o = concatArrays(o, stringToUint8Array("WAVE"));
-
-    // Format Chunk
-    o = concatArrays(o, stringToUint8Array("fmt "));
-    o = concatArrays(o, int32ToLittleEndianArray(16));
-    o = concatArrays(o, int16ToLittleEndianArray(1)); // Format type (1 - PCM)
-    o = concatArrays(o, int16ToLittleEndianArray(channels));
-    o = concatArrays(o, int32ToLittleEndianArray(sampleRate));
-    o = concatArrays(o, int32ToLittleEndianArray((sampleRate * channels * bitsPerSample) / 8));
-    o = concatArrays(o, int16ToLittleEndianArray((channels * bitsPerSample) / 8));
-    o = concatArrays(o, int16ToLittleEndianArray(bitsPerSample));
-
-    // Data Chunk
-    o = concatArrays(o, stringToUint8Array("data"));
-    o = concatArrays(o, int32ToLittleEndianArray(datasize));
-
-    return o;
+function createdDescription(description) {
+    peerConnection.setLocalDescription(description).then(() => {
+        websocket.send(
+            JSON.stringify({
+                type: "rtc",
+                data: { sdp: peerConnection.localDescription, id: state.id },
+            })
+        );
+    });
 }
 
 // Call buttons
@@ -153,14 +110,9 @@ video.addEventListener("change", (event) => {
     sendInterfaceState();
 });
 
-const audio = document.querySelector("#volume");
-audio.addEventListener("change", (event) => {
-    if (audioContext === null) {
-        audioContext = new AudioContext();
-        gainNode = audioContext.createGain();
-    }
-    state.volume = event.target.checked;
-    gainNode.gain.value = state.volume ? 1 : 0;
+const volume = document.querySelector("#volume");
+volume.addEventListener("change", (event) => {
+    console.log(`Audio: ${state.volume}`);
 });
 
 // Expression buttons

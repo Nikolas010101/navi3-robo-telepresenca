@@ -1,106 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <%- include('../partials/head'); %>
-        <link rel="stylesheet" href="/control/style.css">
+    <head>
+        <%- include('../partials/head'); %>
+        <link rel="stylesheet" href="/control/style.css" />
         <script defer src="/frontend_setup/setup.js"></script>
         <script defer src="/control/script.js"></script>
-</head>
+    </head>
 
-<body class="container">
-    <header><%- include('../partials/header'); %></header>
-    <main>
-        <div class="jumbotron">
-            <h1>Controle de dispostivo embarcado</h1>
-            <div class="video-container">
-                <img id="video-player" onerror="this.src='/img/wip.png'" alt="Vídeo">
-            </div>
-            <div class="call-buttons">
-                <div class="call-button">
-                    <input type="checkbox" id="end" name="call" value="end">
-                    <label for="end">
-                        <img class="call-img" src="/img/phone.svg" alt="end">
-                        <p>Encerrar</p>
-                    </label>
+    <body class="container">
+        <header><%- include('../partials/header'); %></header>
+        <main>
+            <div class="jumbotron">
+                <h1>Controle de dispostivo embarcado</h1>
+                <div class="video-container">
+                    <video id="video-player" autoplay alt="Vídeo"></video>
                 </div>
+                <div class="call-buttons">
+                    <div class="call-button">
+                        <input type="checkbox" id="end" name="call" value="end" />
+                        <label for="end">
+                            <img class="call-img" src="/img/phone.svg" alt="end" />
+                            <p>Encerrar</p>
+                        </label>
+                    </div>
 
-                <div class="call-button">
-                    <input type="checkbox" id="mic" name="call" value="mic">
-                    <label for="mic">
-                        <img class="call-img" src="/img/mic_on.svg" alt="end">
-                        <p>Microfone</p>
-                    </label>
-                </div>
+                    <div class="call-button">
+                        <input type="checkbox" id="mic" name="call" value="mic" />
+                        <label for="mic">
+                            <img class="call-img" src="/img/mic_on.svg" alt="end" />
+                            <p>Microfone</p>
+                        </label>
+                    </div>
 
-                <div class="call-button">
-                    <input type="checkbox" id="video" name="call" value="video">
-                    <label for="video">
-                        <img class="call-img" src="/img/video_on.svg" alt="end">
-                        <p>Câmera</p>
-                    </label>
-                </div>
+                    <div class="call-button">
+                        <input type="checkbox" id="video" name="call" value="video" />
+                        <label for="video">
+                            <img class="call-img" src="/img/video_on.svg" alt="end" />
+                            <p>Câmera</p>
+                        </label>
+                    </div>
 
-                <div class="call-button">
-                    <input type="checkbox" id="volume" name="call" value="volume">
-                    <label for="volume">
-                        <img class="call-img" src="/img/volume_on.svg" alt="end">
-                        <p>Áudio</p>
-                    </label>
-                </div>
-            </div>
-            <div class="call-buttons">
-                <div class="call-button">
-                    <input type="radio" id="F" name="expression" value="F">
-                    <label for="F">
-                        <span class="emoji">😀</span>
-                        <p>Felicidade</p>
-                    </label>
-                </div>
-
-                <div class="call-button">
-                    <input type="radio" id="S" name="expression" value="S">
-                    <label for="S">
-                        <span class="emoji">😮</span>
-                        <p>Surpresa</p>
-                    </label>
-                </div>
-
-                <div class="call-button">
-                    <input type="radio" id="D" name="expression" value="D">
-                    <label for="D">
-                        <span class="emoji">🤔</span>
-                        <p>Dúvida</p>
-                    </label>
-                </div>
-
-                <div class="call-button">
-                    <input type="radio" id="N" name="expression" value="N">
-                    <label for="N">
-                        <span class="emoji">😐</span>
-                        <p>Neutro</p>
-                    </label>
-                </div>
-            </div>
-            <div class="sliders">
-                <div class="slider-container">
-                    <h2 class="slider-text">Controle pan</h2>
-                    <div class="slider-inner-container">
-                        <input class="slider" type="range" min=-90 max=90 id="pan" />
-                        <label for="pan" class="slider-label" id="pan-label">0°</label>
+                    <div class="call-button">
+                        <input type="checkbox" id="volume" name="call" value="volume" />
+                        <label for="volume">
+                            <img class="call-img" src="/img/volume_on.svg" alt="end" />
+                            <p>Áudio</p>
+                        </label>
                     </div>
                 </div>
-                <div class="slider-container">
-                    <h2 class="slider-text">Controle tilt</h2>
-                    <div class="slider-inner-container">
-                        <input class="slider" type="range" min=-90 max=90 id="tilt" />
-                        <label for="tilt" class="slider-label" id="tilt-label">0°</label>
+                <div class="call-buttons">
+                    <div class="call-button">
+                        <input type="radio" id="F" name="expression" value="F" />
+                        <label for="F">
+                            <span class="emoji">😀</span>
+                            <p>Felicidade</p>
+                        </label>
+                    </div>
+
+                    <div class="call-button">
+                        <input type="radio" id="S" name="expression" value="S" />
+                        <label for="S">
+                            <span class="emoji">😮</span>
+                            <p>Surpresa</p>
+                        </label>
+                    </div>
+
+                    <div class="call-button">
+                        <input type="radio" id="D" name="expression" value="D" />
+                        <label for="D">
+                            <span class="emoji">🤔</span>
+                            <p>Dúvida</p>
+                        </label>
+                    </div>
+
+                    <div class="call-button">
+                        <input type="radio" id="N" name="expression" value="N" />
+                        <label for="N">
+                            <span class="emoji">😐</span>
+                            <p>Neutro</p>
+                        </label>
+                    </div>
+                </div>
+                <div class="sliders">
+                    <div class="slider-container">
+                        <h2 class="slider-text">Controle pan</h2>
+                        <div class="slider-inner-container">
+                            <input class="slider" type="range" min="-90" max="90" id="pan" />
+                            <label for="pan" class="slider-label" id="pan-label">0°</label>
+                        </div>
+                    </div>
+                    <div class="slider-container">
+                        <h2 class="slider-text">Controle tilt</h2>
+                        <div class="slider-inner-container">
+                            <input class="slider" type="range" min="-90" max="90" id="tilt" />
+                            <label for="tilt" class="slider-label" id="tilt-label">0°</label>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
-    <footer><%- include('../partials/footer'); %></footer>
-</body>
-
+        </main>
+        <footer><%- include('../partials/footer'); %></footer>
+    </body>
 </html>

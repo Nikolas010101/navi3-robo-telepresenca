@@ -1,10 +1,6 @@
 {
     "SERVER_IP": "192.168.15.189",
     "ROBOT_IP": "localhost",
-    "CHUNK": 8192,
-    "BPS": 16,
-    "CHANNELS": 1,
-    "RATE": 44100,
     "INTERVAL": 1,
     "WIDTH": 320,
     "HEIGHT": 240,
