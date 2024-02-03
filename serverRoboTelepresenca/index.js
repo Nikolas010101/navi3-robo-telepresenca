@@ -139,11 +139,11 @@ wsServer.on("connection", function (connection) {
                 break;
             case "robot_audio":
             case "robot_video":
+            case "rtc":
                 distributeData(message, userID);
                 break;
             default:
                 console.log(`Unsupported message type: ${message.type}`);
-                distributeData(message, userID);
                 break;
         }
     });
