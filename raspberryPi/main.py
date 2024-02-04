@@ -1,5 +1,4 @@
 import json, pigpio as pio, time
-from threading import Thread
 from websockets.sync.client import connect
 from websockets.exceptions import InvalidURI, InvalidHandshake, ConnectionClosedError
 from os.path import join, abspath
@@ -36,20 +35,15 @@ def move_servos(pan: int, tilt: int) -> None:
     pi.set_servo_pulsewidth(TILT_PIN, pulsewidth_tilt)
 
 
-def listen() -> None:
-    while True:
-        try:
-            with connect(f"ws://{SERVER_IP}:3000") as websocket:
-                websocket.send(json.dumps({"type": "messages", "messages": ["pose"]}))
-                while True:
-                    data = json.loads(websocket.recv())
-                    pan, tilt = data["pan"], data["tilt"]
-                    print(f"Pan: {pan}, Tilt: {tilt}")
-                    move_servos(pan, tilt)
-        except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
-            print(f"Could not connect to server, error: {e}")
-            time.sleep(2)
-
-
-listen_thread = Thread(target=listen)
-listen_thread.start()
+while True:
+    try:
+        with connect(f"ws://{SERVER_IP}:3000") as websocket:
+            websocket.send(json.dumps({"type": "messages", "messages": ["pose"]}))
+            while True:
+                data = json.loads(websocket.recv())
+                pan, tilt = data["pan"], data["tilt"]
+                print(f"Pan: {pan}, Tilt: {tilt}")
+                move_servos(pan, tilt)
+    except (InvalidURI, OSError, InvalidHandshake, ConnectionClosedError) as e:
+        print(f"Could not connect to server, error: {e}")
+        time.sleep(2)
