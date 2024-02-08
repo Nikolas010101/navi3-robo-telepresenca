@@ -1,12 +1,16 @@
+import os
+
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+os.chdir(FILE_PATH)
+
 import cv2, numpy as np, json, time, base64
 from websockets.sync.client import connect
 from websockets.exceptions import InvalidURI, InvalidHandshake, ConnectionClosedError
 from rmn import RMN
 from mediapipe import solutions
-from os.path import join, abspath
 
 with open(
-    abspath(join(__file__, "../../public/server_setup/setup.json")),
+    os.path.abspath(os.path.join(__file__, "../../public/server_setup/setup.json")),
     "r",
 ) as file:
     SETUP: dict = json.load(file)
