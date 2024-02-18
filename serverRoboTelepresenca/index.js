@@ -23,14 +23,12 @@ const port = 3000;
 
 const SETUP = {
     SERVER_IP: ip,
-    ROBOT_IP: "localhost",
     INTERVAL: 0.5,
     WIDTH: 320,
     HEIGHT: 240,
     EXPRESSION_DETECTION_PROGRAM: join(__dirname, "expression_detection/expression_detection.py"),
     FACE_DETECTOR_PATH: join(__dirname, "expression_detection/haarcascade_frontalface_default.xml"),
-    INTERFACE_MEDIA_PROGRAM: join(__dirname, "../interface_media/media.py"),
-    DYNAMIC_CONTROLLER: 0,
+    INTERFACE_MEDIA_PROGRAM: join(__dirname, "../interface_media/media.py")
 };
 
 // writes to setup.json

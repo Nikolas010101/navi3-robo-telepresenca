@@ -1,11 +1,9 @@
 {
     "SERVER_IP": "192.168.15.189",
-    "ROBOT_IP": "localhost",
     "INTERVAL": 0.5,
     "WIDTH": 320,
     "HEIGHT": 240,
     "EXPRESSION_DETECTION_PROGRAM": "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/expression_detection/expression_detection.py",
     "FACE_DETECTOR_PATH": "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/serverRoboTelepresenca/expression_detection/haarcascade_frontalface_default.xml",
-    "INTERFACE_MEDIA_PROGRAM": "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/interface_media/media.py",
-    "DYNAMIC_CONTROLLER": 0
+    "INTERFACE_MEDIA_PROGRAM": "/home/nikolas/Documents/GitHub/navi3-robo-telepresenca/interface_media/media.py"
 }
