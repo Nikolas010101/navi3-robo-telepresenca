@@ -58,7 +58,7 @@ function startConnection(isCaller) {
     peerConnection = new RTCPeerConnection(peerConnectionConfig);
     peerConnection.onicecandidate = (event) => {
         if (event.candidate != null) {
-            websocket.send(JSON.stringify({ type: "rtc", data: { ice: event.candidate, id: state.id } }));
+            websocket.send(JSON.stringify({ type: "rtc", data: { ice: event.candidate } }));
         }
     };
     peerConnection.ontrack = (event) => {
@@ -78,7 +78,7 @@ function createdDescription(description) {
         websocket.send(
             JSON.stringify({
                 type: "rtc",
-                data: { sdp: peerConnection.localDescription, id: state.id },
+                data: { sdp: peerConnection.localDescription },
             })
         );
     });

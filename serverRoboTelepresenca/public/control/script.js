@@ -1,5 +1,4 @@
 const state = {
-        id: "",
         mic: true,
         video: true,
         volume: true,
@@ -20,7 +19,7 @@ websocket.addEventListener("open", async (event) => {
     websocket.send(
         JSON.stringify({
             type: "messages",
-            messages: ["id", "fex", "pose", "rtc"],
+            messages: ["fex", "pose", "rtc"],
         })
     );
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
@@ -33,9 +32,6 @@ websocket.addEventListener("open", async (event) => {
 websocket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
     switch (message.type) {
-        case "id":
-            state.id = message.id;
-            break;
         case "fex":
             state.fex = message.fex;
             updateFacialExpression(message);
@@ -65,7 +61,7 @@ function startConnection(isCaller) {
     peerConnection = new RTCPeerConnection(peerConnectionConfig);
     peerConnection.onicecandidate = (event) => {
         if (event.candidate != null) {
-            websocket.send(JSON.stringify({ type: "rtc", data: { ice: event.candidate, id: state.id } }));
+            websocket.send(JSON.stringify({ type: "rtc", data: { ice: event.candidate } }));
         }
     };
     peerConnection.ontrack = (event) => {
@@ -86,7 +82,7 @@ function createdDescription(description) {
         websocket.send(
             JSON.stringify({
                 type: "rtc",
-                data: { sdp: peerConnection.localDescription, id: state.id },
+                data: { sdp: peerConnection.localDescription },
             })
         );
     });

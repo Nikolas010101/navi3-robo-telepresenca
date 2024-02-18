@@ -30,6 +30,7 @@ const SETUP = {
     EXPRESSION_DETECTION_PROGRAM: join(__dirname, "expression_detection/expression_detection.py"),
     FACE_DETECTOR_PATH: join(__dirname, "expression_detection/haarcascade_frontalface_default.xml"),
     INTERFACE_MEDIA_PROGRAM: join(__dirname, "../interface_media/media.py"),
+    DYNAMIC_CONTROLLER: 0,
 };
 
 // writes to setup.json
@@ -66,7 +67,6 @@ wsServer.on("connection", function (connection) {
         switch (message.type) {
             case "messages":
                 clients[userID].messages = message.messages;
-                distributeData({ type: "id", id: userID });
                 distributeData({ type: "pose", pan: state.pan, tilt: state.tilt }, 0);
                 distributeData({ type: "fex", fex: state.fex }, 0);
                 break;
@@ -112,11 +112,10 @@ const clients = {};
 function distributeData(message, userID) {
     const data = JSON.stringify(message);
     Object.entries(clients).forEach(([ID, client]) => {
-        if (
-            ID !== userID &&
-            client.connection.readyState === WebSocket.OPEN &&
-            client.messages.includes(message.type)
-        ) {
+        if (client.connection.readyState !== WebSocket.OPEN) {
+            return;
+        }
+        if (ID !== userID && client.messages.includes(message.type)) {
             client.connection.send(data);
         }
     });
