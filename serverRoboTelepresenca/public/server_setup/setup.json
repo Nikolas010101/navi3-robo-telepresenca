@@ -1,5 +1,5 @@
 {
-    "SERVER_IP": "192.168.15.189",
+    "SERVER_IP": "192.168.0.101",
     "INTERVAL": 0.5,
     "WIDTH": 320,
     "HEIGHT": 240,

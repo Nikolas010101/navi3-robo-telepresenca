@@ -1,4 +1,4 @@
-const SERVER_IP = "192.168.15.189" 
+const SERVER_IP = "192.168.0.101" 
 const INTERVAL = 0.5 
 const WIDTH = 320 
 const HEIGHT = 240 
