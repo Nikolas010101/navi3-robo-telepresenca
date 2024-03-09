@@ -22,7 +22,17 @@ websocket.addEventListener("open", async (event) => {
             messages: ["fex", "rtc"],
         })
     );
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: {
+            width: { exact: 320 },
+            height: { exact: 240 },
+            frameRate: {
+                ideal: 24,
+                max: 30,
+            },
+        },
+    });
 
     localStream = stream;
     startConnection(true);
