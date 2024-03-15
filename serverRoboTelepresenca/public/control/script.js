@@ -54,7 +54,6 @@ websocket.addEventListener("message", (event) => {
             } else if (signal.ice) {
                 peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice));
             }
-            sendFrame();
             break;
     }
 });
@@ -167,6 +166,7 @@ async function sendFex() {
 }
 
 async function sendFrame() {
+    if (!state.video) return;
     function arrayBufferToBase64(buffer) {
         let binary = "";
         const bytes = new Uint8Array(buffer);
